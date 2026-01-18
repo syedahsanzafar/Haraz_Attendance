@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Attendance System</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="logo.png">
+    <!-- Styles -->
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-card: rgba(30, 30, 30, 0.6);
+            --bg-card-hover: rgba(40, 40, 40, 0.8);
+            --primary: #d4a373;
+            /* Latte Color */
+            --primary-hover: #b08968;
+            --accent: #6f4e37;
+            /* Coffee Bean */
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(212, 163, 115, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(111, 78, 55, 0.1) 0%, transparent 20%);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border-right: var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            z-index: 10;
+        }
+
+        .logo {
+            margin-bottom: 3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo img {
+            width: 80%;
+            max-width: 200px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            list-style: none;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(212, 163, 115, 0.1);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(212, 163, 115, 0.1);
+        }
+
+        .nav-link i {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .main-content::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('bg.png') no-repeat center center;
+            background-size: cover;
+            opacity: 0.5;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .clock-display {
+            font-size: 1.2rem;
+            color: var(--primary);
+            font-weight: 500;
+            background: var(--bg-card);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: var(--glass-border);
+        }
+
+        /* Mobile Responsive */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        @media screen and (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                height: 100vh;
+                transition: left 0.3s ease-in-out;
+                width: 260px;
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .header {
+                justify-content: flex-start;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+                flex: 1;
+            }
+
+            /* Make Tables Scrollable/Responsive */
+            .table-container {
+                padding: 1rem;
+            }
+
+            th,
+            td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Dashboard Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(4px);
+            border: var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-icon.employees {
+            color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.1);
+        }
+
+        .stat-icon.working {
+            color: var(--success);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .stat-icon.ontime {
+            color: var(--warning);
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .stat-info h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-info p {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: var(--glass-border);
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        td {
+            color: var(--text-main);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status-inactive {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--danger);
+        }
+
+        /* Buttons & Inputs */
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(212, 163, 115, 0.1);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: #1e1e1e;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 400px;
+            max-width: 90%;
+            border: var(--glass-border);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.open .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Keypad for Passcode */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .key-btn {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .key-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Sections visibility */
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Floating Action Button for Terminal/Kiosk Mode */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 20px rgba(212, 163, 115, 0.4);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 90;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
+        /* Fingerprint Scanner Styles */
+        .scanner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            user-select: none;
+        }
+
+        .fingerprint-icon {
+            font-size: 5rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .scanner-ring {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--primary);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Scanning Animation */
+        .scanning .fingerprint-icon {
+            color: var(--primary);
+        }
+
+        .scanning .scanner-ring {
+            opacity: 1;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            top: 0;
+            left: 0;
+            display: none;
+        }
+
+        .scanning .scan-line {
+            display: block;
+            animation: scanMove 1.5s ease-in-out infinite;
+        }
+
+        /* Success/Error States */
+        .scan-success .fingerprint-icon {
+            color: var(--success);
+        }
+
+        .scan-success .scanner-ring {
+            border-color: var(--success);
+            animation: none;
+            opacity: 1;
+        }
+
+        .scan-error .fingerprint-icon {
+            color: var(--danger);
+        }
+
+        .scan-error .scanner-ring {
+            border-color: var(--danger);
+            animation: none;
+            opacity: 1;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes scanMove {
+
+            0%,
+            100% {
+                top: 20%;
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 80%;
+                opacity: 0;
+            }
+        }
+
+        .tabs-container {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Toast Notification */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideDown 0.3s ease-out;
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .toast.info {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="logo">
+            <img src="logo.png" alt="Logo">
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item">
+                <a class="nav-link active" onclick="showSection('dashboard', this)">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('employees', this)">
+                    <i class="fas fa-users"></i> Employees
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('payroll', this)">
+                    <i class="fas fa-file-invoice-dollar"></i> Payroll
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('system', this)">
+                    <i class="fas fa-cogs"></i> System
+                </a>
+            </li>
+        </ul>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: auto;">
+            <p>&copy; 2026 Haraz Systems</p>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <header class="header">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <!-- DB Status Indicator -->
+                <div id="dbStatusDisplay"
+                    style="font-size: 0.9rem; font-weight: bold; color: var(--success); display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
+                    <i class="fas fa-database"></i> Connecting...
+                </div>
+                <!-- Clock -->
+                <div class="clock-display" id="clock">12:00 PM</div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD SECTION -->
+        <section id="dashboard" class="section active">
+            <div class="stats-grid">
+                <div class="stat-card" onclick="showStatDetails('total')" style="cursor: pointer;">
+                    <div class="stat-icon employees">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Employees</h3>
+                        <p id="totalEmployees">0</p>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="showStatDetails('working')" style="cursor: pointer;">
+                    <div class="stat-icon working">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Currently Working</h3>
+                        <p id="activeEmployees">0</p>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="showStatDetails('ontime')" style="cursor: pointer;">
+                    <div class="stat-icon ontime">
+                        <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>On Time Today</h3>
+                        <p id="onTimeEmployees">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <h3 style="margin-bottom: 1rem;">Live Attendance</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role/Position</th>
+                            <th>Clock In Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="liveAttendanceTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- EMPLOYEES SECTION -->
+        <section id="employees" class="section">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                <button class="btn btn-primary" onclick="openModal('employeeModal')">
+                    <i class="fas fa-plus"></i> Add Employee
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Wage/Hr</th>
+                            <th>Passcode</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PAYROLL SECTION -->
+        <section id="payroll" class="section">
+            <div class="table-container">
+                <h3 style="margin-bottom: 1rem;">Payroll & Wages</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Total Earned (All Time)</th>
+                            <th>Total Paid</th>
+                            <th>Balance Due</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payrollTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SYSTEM SECTION -->
+        <section id="system" class="section">
+            <div class="stats-grid">
+                <!-- Cloud Sync Stats removed -->
+            </div>
+
+            <div class="table-container">
+                <h3 style="margin-bottom: 1.5rem;">System Settings & Backup</h3>
+
+
+                <!-- GitHub Sync Section -->
+                <div style="margin-bottom: 2rem;">
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fab fa-github" style="color: var(--text-main)"></i> GitHub Database Sync
+                        </h4>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                            Manage your cloud backup manually.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <button class="btn btn-outline" style="border-color: var(--primary); color: var(--primary);"
+                                onclick="uploadToGitHub(true)">
+                                <i class="fas fa-cloud-upload-alt"></i> Upload Database
+                            </button>
+                            <button class="btn btn-outline" style="border-color: var(--warning); color: var(--warning);"
+                                onclick="downloadFromGitHub(true)">
+                                <i class="fas fa-cloud-download-alt"></i> Download Database
+                            </button>
+                        </div>
+                        <div id="githubStatus"
+                            style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Local Backup Section -->
+            <div
+                style="margin-top: 2rem; margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="margin-bottom: 1rem;">Local Backup</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-file-export" style="color: var(--primary)"></i> Backup to File
+                        </h4>
+                        <button class="btn btn-outline" style="width: 100%;" onclick="downloadLocalBackup()">
+                            <i class="fas fa-download"></i> Save Backup
+                        </button>
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-file-import" style="color: var(--warning)"></i> Restore from File
+                        </h4>
+                        <input type="file" id="restoreFile" style="display: none" onchange="restoreLocalBackup(this)"
+                            accept=".json">
+                        <button class="btn btn-outline"
+                            style="width: 100%; color: var(--warning); border-color: var(--warning);"
+                            onclick="document.getElementById('restoreFile').click()">
+                            <i class="fas fa-upload"></i> Restore Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Local Reset -->
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <h4 style="color: var(--danger); margin-bottom: 0.5rem;">Danger Zone</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                    Permanently delete all local data. This cannot be undone.
+                </p>
+                <button class="btn"
+                    style="background: rgba(244, 67, 54, 0.2); color: var(--danger); border: 1px solid var(--danger);"
+                    onclick="resetLocalData()">
+                    <i class="fas fa-trash-alt"></i> Reset Local Database
+                </button>
+            </div>
+            </div>
+
+            <div id="syncStatus" style="margin-top: 1rem; text-align: center; height: 1.5rem; font-weight: 500;"></div>
+        </section>
+
+    </main>
+
+    <!-- KIOSK BUTTON -->
+    <button class="fab" onclick="openKeypad('clock')" title="Clock In/Out">
+        <i class="fas fa-fingerprint"></i>
+    </button>
+
+    <!-- EMPLOYEE MODAL -->
+    <div class="modal-overlay" id="employeeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Employee</h2>
+                <button class="close-modal" onclick="closeModal('employeeModal')">&times;</button>
+            </div>
+            <form onsubmit="saveEmployee(event)">
+                <input type="hidden" id="editEmployeeId">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" class="form-control" id="empName" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" class="form-control" id="empPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Wage Per Hour ($)</label>
+                    <input type="number" step="0.01" class="form-control" id="empWage" required>
+                </div>
+                <div class="form-group">
+                    <label>Passcode (4-6 digits)</label>
+                    <input type="number" class="form-control" id="empPasscode" required>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Duty Start</label>
+                        <input type="time" class="form-control" id="empDutyStart">
+                    </div>
+                    <div>
+                        <label>Shift End</label>
+                        <input type="time" class="form-control" id="empShiftEnd">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="empHasBio" onchange="toggleBioRegistration(this)">
+                        <span>Enable Biometric Login</span>
+                    </label>
+                </div>
+
+                <!-- Bio Registration Section (Hidden by default) -->
+                <div id="bioRegisterSection"
+                    style="display:none; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                    <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;" id="bioRegStatus">
+                        Tap & Hold scanner to register fingerprint
+                    </p>
+
+                    <div class="scanner-container" style="padding: 1rem;" id="regScanner" onmousedown="startRegScan()"
+                        onmouseup="endRegScan()" ontouchstart="startRegScan()" ontouchend="endRegScan()">
+                        <div class="scanner-ring" style="width: 80px; height: 80px;"></div>
+                        <i class="fas fa-fingerprint" style="font-size: 3rem; color: var(--text-muted);"
+                            id="regFingerIcon"></i>
+                    </div>
+
+                    <input type="hidden" id="empBioData"> <!-- Stores 'Simulated' Bio Data -->
+                </div>
+
+                <div class="form-group">
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">(This allows this employee to use the
+                        fingerprint scanner)</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%">Save Employee</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- KEYPAD / BIOMETRIC MODAL -->
+    <div class="modal-overlay" id="keypadModal">
+        <div class="modal" style="width: 380px;">
+            <div class="modal-header">
+                <h2>Staff Check-In</h2>
+                <button class="close-modal" onclick="closeKeypad()">&times;</button>
+            </div>
+
+            <div class="tabs-container">
+                <div class="tab active" onclick="switchTab('passcode')" id="tab-passcode">Passcode</div>
+                <div class="tab" onclick="switchTab('biometric')" id="tab-biometric">Biometric</div>
+            </div>
+
+            <!-- Passcode Section -->
+            <div id="section-passcode">
+                <div style="margin-bottom: 2rem;">
+                    <input type="password" class="form-control" id="keypadDisplay" readonly
+                        style="font-size: 2rem; letter-spacing: 0.5rem; text-align: center; height: 60px;">
+                    <div id="keypadMsg" style="text-align: center; margin-top: 10px; height: 20px; font-size: 0.9rem;">
+                    </div>
+                </div>
+                <div class="keypad">
+                    <button class="key-btn" onclick="keyPress(1)">1</button>
+                    <button class="key-btn" onclick="keyPress(2)">2</button>
+                    <button class="key-btn" onclick="keyPress(3)">3</button>
+                    <button class="key-btn" onclick="keyPress(4)">4</button>
+                    <button class="key-btn" onclick="keyPress(5)">5</button>
+                    <button class="key-btn" onclick="keyPress(6)">6</button>
+                    <button class="key-btn" onclick="keyPress(7)">7</button>
+                    <button class="key-btn" onclick="keyPress(8)">8</button>
+                    <button class="key-btn" onclick="keyPress(9)">9</button>
+                    <button class="key-btn" onclick="keyPress('clear')" style="color: var(--danger)"><i
+                            class="fas fa-backspace"></i></button>
+                    <button class="key-btn" onclick="keyPress(0)">0</button>
+                    <button class="key-btn" onclick="submitPasscode()"
+                        style="background: var(--primary); color:black"><i class="fas fa-check"></i></button>
+                </div>
+            </div>
+
+            <!-- Biometric Section -->
+            <div id="section-biometric" style="display: none;">
+                <div class="scanner-container" id="scannerEffect" onmousedown="startScan()" onmouseup="endScan()"
+                    ontouchstart="startScan()" ontouchend="endScan()">
+                    <div class="scanner-ring"></div>
+                    <div class="scan-line"></div>
+                    <i class="fas fa-fingerprint fingerprint-icon"></i>
+                </div>
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
+                    <p id="bioStatus">Press and hold to scan</p>
+                </div>
+
+                <!-- Demo Selector -->
+                <div class="form-group">
+                    <label>Simulate Fingerprint For (Demo):</label>
+                    <select class="form-control" id="bioDemoSelect">
+                        <option value="">-- Choose Staff --</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PAYROLL DETAILS MODAL -->
+    <div class="modal-overlay" id="payrollModal">
+        <div class="modal" style="width: 700px; max-width: 95%;">
+            <div class="modal-header">
+                <h2 id="payrollModalTitle">Employee Details</h2>
+                <button class="close-modal" onclick="closeModal('payrollModal')">&times;</button>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem">Total Earned</h4>
+                    <p id="detailEarned" style="font-size:1.5rem; font-weight:bold">$0.00</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem">Total Paid</h4>
+                    <p id="detailPaid" style="font-size:1.5rem; font-weight:bold">$0.00</p>
+                </div>
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; border: 1px solid var(--primary);">
+                    <h4 style="color:var(--primary); font-size:0.8rem; margin-bottom:0.5rem">Balance Due</h4>
+                    <p id="detailBalance" style="font-size:1.5rem; font-weight:bold; color:var(--primary)">$0.00</p>
+                </div>
+            </div>
+
+            <!-- Add Payment Form -->
+            <div
+                style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; gap:1rem; align-items:flex-end;">
+                <div class="form-group" style="margin-bottom:0; flex:1">
+                    <label>Amount to Pay ($)</label>
+                    <input type="number" step="0.01" class="form-control" id="payAmount"
+                        style="border-color: var(--success); color: var(--success); font-weight:bold; font-size:1.1rem;">
+                </div>
+                <button class="btn btn-primary" onclick="submitPayment()"
+                    style="background:var(--success); color:white;">
+                    <i class="fas fa-money-bill-wave"></i> Record Payment
+                </button>
+            </div>
+
+            <div class="tabs-container">
+                <div class="tab active" onclick="switchDetailTab('history')" id="dtab-history">Work History</div>
+                <div class="tab" onclick="switchDetailTab('payments')" id="dtab-payments">Payment Records</div>
+            </div>
+
+            <div id="dsection-history" style="max-height: 300px; overflow-y: auto;">
+                <table style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>In</th>
+                            <th>Out</th>
+                            <th>Hrs</th>
+                            <th>Earned</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workHistoryBody"></tbody>
+                </table>
+            </div>
+
+            <div id="dsection-payments" style="display:none; max-height: 300px; overflow-y: auto;">
+                <table style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Date Paid</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentHistoryBody"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    </div>
+
+    <!-- LIST DETAILS MODAL -->
+    <div class="modal-overlay" id="listModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="listModalTitle">Details</h2>
+                <button class="close-modal" onclick="closeModal('listModal')">&times;</button>
+            </div>
+            <div id="listModalContent" class="list-group">
+                <!-- Items populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let employees = JSON.parse(localStorage.getItem('haraz_employees')) || [];
+        let attendanceLogs = JSON.parse(localStorage.getItem('haraz_attendance')) || [];
+        let payments = JSON.parse(localStorage.getItem('haraz_payments')) || [];
+        let currentDetailEmpId = null;
+
+        // Constants
+        const SHIFT_START_HOUR = 9; // 9 AM is considered start time
+
+        // GitHub Config
+        const GITHUB_TOKEN = "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";
+        const REPO_OWNER = "syedahsanzafar";
+        const REPO_NAME = "syedahsanzafar";
+        const FILE_PATH = "attendance_db.json";
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            renderDashboard();
+            renderEmployeeTable();
+            checkSyncStatus(); // Check for updates on load
+            // updateConnectionStatus(); // Removed in favor of dbStatus
+        });
+
+        // --- NAVIGATION ---
+        function showSection(sectionId, linkElement) {
+            // Auto Fullscreen
+            if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen blocked"));
+            }
+
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            // Show target section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Update Sidebar
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            linkElement.classList.add('active');
+
+            // Update Title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'employees': 'Staff Management',
+                'payroll': 'Payroll & Wages',
+                'system': 'System Settings'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionId];
+
+            // Hide sidebar on mobile after selection
+            if (window.innerWidth <= 768) {
+                document.querySelector('.sidebar').classList.remove('active');
+            }
+
+            if (sectionId === 'dashboard') renderDashboard();
+            if (sectionId === 'payroll') renderPayrollTable();
+            if (sectionId === 'dashboard') renderDashboard();
+            if (sectionId === 'payroll') renderPayrollTable();
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+
+            toast.innerHTML = `<i class="fas fa-${icon}"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function setDbStatus(msg, type = 'success') {
+            const el = document.getElementById('dbStatusDisplay');
+            if (!el) return;
+
+            let color = 'var(--success)';
+            let icon = 'database';
+
+            if (type === 'error') { color = 'var(--danger)'; icon = 'exclamation-triangle'; }
+            if (type === 'working') { color = 'var(--warning)'; icon = 'sync fa-spin'; }
+
+            el.style.color = color;
+            el.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
+        }
+
+        window.addEventListener('online', () => setDbStatus('Database Connected', 'success'));
+        window.addEventListener('offline', () => setDbStatus('Offline Mode', 'error'));
+
+        // --- GITHUB SYNC ---
+
+        async function checkSyncStatus() {
+            setDbStatus('Connecting...', 'working');
+            const statusEl = document.getElementById('githubStatus');
+            if (statusEl) statusEl.textContent = 'Checking cloud for updates...';
+
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (res.ok) {
+                    setDbStatus('Database Connected', 'success');
+                    const data = await res.json();
+
+                    // Optimization: If content is large, GitHub API returns valid base64 with newlines.
+                    // We need to clean it before decoding.
+                    const cleanContent = data.content.replace(/\n/g, '');
+                    const contentStr = decodeURIComponent(escape(atob(cleanContent)));
+                    const content = JSON.parse(contentStr);
+
+                    const localLastUpdate = new Date(localStorage.getItem('haraz_last_updated') || 0);
+                    const cloudLastUpdate = new Date(content.lastUpdated || 0);
+
+                    if (cloudLastUpdate > localLastUpdate) {
+                        if (statusEl) {
+                            statusEl.innerHTML = `<span style="color: var(--warning)"><i class="fas fa-exclamation-circle"></i> New cloud data available! (${cloudLastUpdate.toLocaleString()})</span>`;
+                        }
+                    } else {
+                        if (statusEl) {
+                            statusEl.textContent = 'System is up to date.';
+                            statusEl.style.color = 'var(--success)';
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Check Sync Failed", err);
+            }
+        }
+
+        async function uploadToGitHub(showAlert = false) {
+            const statusEl = document.getElementById('githubStatus');
+            if (statusEl) statusEl.textContent = 'Uploading to GitHub...';
+
+            setDbStatus('Syncing...', 'working');
+
+            const lastUpdated = new Date().toISOString();
+            localStorage.setItem('haraz_last_updated', lastUpdated);
+
+            const payload = {
+                employees,
+                attendanceLogs,
+                payments,
+                lastUpdated: lastUpdated
+            };
+
+            // Optimization: Remove whitespace from JSON to reduce payload size
+            const jsonStr = JSON.stringify(payload);
+            const contentBase64 = btoa(unescape(encodeURIComponent(jsonStr)));
+
+            try {
+                // 1. Get current SHA
+                const getRes = await fetch(API_URL, {
+                    headers: {
+                        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                let sha = null;
+                if (getRes.ok) {
+                    const getData = await getRes.json();
+                    sha = getData.sha;
+                }
+
+                // 2. Upload/Update
+                const body = {
+                    message: "Auto-sync from Haraz Attendance App",
+                    content: contentBase64
+                };
+                if (sha) body.sha = sha;
+
+                const putRes = await fetch(API_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (putRes.ok) {
+                    console.log("GitHub Upload Successful");
+                    setDbStatus('Database Updated', 'success');
+
+                    if (statusEl) {
+                        statusEl.textContent = 'Last synced: ' + new Date().toLocaleTimeString();
+                        statusEl.style.color = 'var(--success)';
+                    }
+
+                    if (showAlert) {
+                        alert("Database uploaded to GitHub successfully!");
+                    }
+                } else {
+                    const err = await putRes.json();
+                    throw new Error(err.message || "Upload failed");
+                }
+
+            } catch (error) {
+                console.error("GitHub Upload Error:", error);
+                if (statusEl) {
+                    statusEl.textContent = 'Upload failed.';
+                    statusEl.style.color = 'var(--danger)';
+                }
+                setDbStatus('Sync Failed', 'error');
+
+                if (showAlert) {
+                    alert("Failed to upload: " + error.message);
+                }
+            }
+        }
+
+        async function downloadFromGitHub(showAlert = false) {
+            const statusEl = document.getElementById('githubStatus');
+            if (statusEl) statusEl.textContent = 'Downloading from GitHub...';
+
+            if (showAlert && !confirm("This will overwrite your local data with the cloud version. Continue?")) return;
+
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+
+                    if (content.employees && content.attendanceLogs) {
+                        employees = content.employees;
+                        attendanceLogs = content.attendanceLogs;
+                        payments = content.payments || [];
+
+                        localStorage.setItem('haraz_last_updated', content.lastUpdated || new Date().toISOString());
+                        saveData(false); // Save locally without re-uploading
+
+                        renderEmployeeTable();
+                        renderDashboard();
+
+                        if (statusEl) {
+                            statusEl.textContent = 'Download Complete!';
+                            statusEl.style.color = 'var(--success)';
+                        }
+                        if (showAlert) alert("Database restored from GitHub!");
+                    }
+                } else {
+                    throw new Error("Failed to fetch file");
+                }
+            } catch (err) {
+                console.error("GitHub Download Error:", err);
+                if (statusEl) {
+                    statusEl.textContent = 'Download failed.';
+                    statusEl.style.color = 'var(--danger)';
+                }
+                if (showAlert) alert("Error downloading: " + err.message);
+            }
+        }
+
+        function resetLocalData() {
+            if (confirm("CRITICAL WARNING: This will permanently delete all employees and logs from this device. Are you absolutely sure?")) {
+                localStorage.removeItem('haraz_employees');
+                localStorage.removeItem('haraz_attendance');
+                localStorage.removeItem('haraz_payments');
+                location.reload();
+            }
+        }
+
+        function downloadLocalBackup() {
+            const data = {
+                employees,
+                attendanceLogs,
+                payments
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "attendance_db" + new Date().toISOString().slice(0, 10) + ".json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function restoreLocalBackup(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.employees && data.attendanceLogs) {
+                        if (confirm("This will overwrite your current local data with the backup file. Continue?")) {
+                            employees = data.employees;
+                            attendanceLogs = data.attendanceLogs;
+                            payments = data.payments || [];
+                            saveData();
+                            location.reload();
+                        }
+                    } else {
+                        alert("Invalid backup file format.");
+                    }
+                } catch (err) {
+                    alert("Error parsing backup file.");
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; // Reset input
+        }
+
+        // --- PAYROLL v2 ---
+
+        function renderPayrollTable() {
+            const tbody = document.getElementById('payrollTable');
+
+            let html = '';
+
+            employees.forEach(emp => {
+                const stats = calculateEmployeeStats(emp.id);
+
+                html += `
+                    <tr>
+                        <td>
+                            <div style="font-weight:bold">${emp.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted)">$${emp.wage}/hr</div>
+                        </td>
+                        <td>$${stats.totalEarned.toFixed(2)}</td>
+                        <td>$${stats.totalPaid.toFixed(2)}</td>
+                        <td style="color: ${stats.balance > 0 ? 'var(--warning)' : 'var(--success)'}; font-weight: bold;">
+                            $${stats.balance.toFixed(2)}
+                        </td>
+                        <td>
+                            <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="openPayrollDetails('${emp.id}')">
+                                <i class="fas fa-list"></i> Details
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            if (employees.length === 0) {
+                html = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted)">No employees found.</td></tr>`;
+            }
+
+            tbody.innerHTML = html;
+        }
+
+        function getPayableHours(log, emp) {
+            const checkIn = new Date(log.checkIn);
+            const checkOut = new Date(log.checkOut);
+
+            let effectiveCheckIn = checkIn;
+
+            // Apply Duty Start Logic
+            if (emp.dutyStart) {
+                const [h, m] = emp.dutyStart.split(':');
+                const dutyStart = new Date(checkIn); // Create date object on same day as checkIn
+                dutyStart.setHours(parseInt(h), parseInt(m), 0, 0);
+
+                // If they clocked in earlier than duty start, pay starts at duty start
+                if (checkIn < dutyStart) {
+                    effectiveCheckIn = dutyStart;
+                }
+            }
+
+            // NOTE: We generally pay until actual checkout. Logic can be added here for shiftEnd if needed.
+
+            const durationMs = checkOut - effectiveCheckIn;
+            // Ensure non-negative (incase checkOut is somehow before dutyStart due to weird data)
+            if (durationMs < 0) return 0;
+
+            return durationMs / (1000 * 60 * 60);
+        }
+
+        function calculateEmployeeStats(empId) {
+            const emp = employees.find(e => e.id == empId);
+            if (!emp) return { totalEarned: 0, totalPaid: 0, balance: 0 };
+
+            // Calculate Earned
+            let totalEarned = 0;
+            const myLogs = attendanceLogs.filter(log => log.empId == empId && log.checkOut);
+            myLogs.forEach(log => {
+                const hours = getPayableHours(log, emp);
+                totalEarned += hours * emp.wage;
+            });
+
+            // Calculate Paid
+            let totalPaid = 0;
+            const myPayments = payments.filter(p => p.empId == empId);
+            myPayments.forEach(p => totalPaid += p.amount);
+
+            return {
+                totalEarned,
+                totalPaid,
+                balance: totalEarned - totalPaid
+            };
+        }
+
+        function openPayrollDetails(empId) {
+            currentDetailEmpId = empId;
+            const emp = employees.find(e => e.id == empId);
+            if (!emp) return;
+
+            document.getElementById('payrollModalTitle').textContent = emp.name + " - Details";
+
+            // Update Stats
+            const stats = calculateEmployeeStats(empId);
+            document.getElementById('detailEarned').textContent = '$' + stats.totalEarned.toFixed(2);
+            document.getElementById('detailPaid').textContent = '$' + stats.totalPaid.toFixed(2);
+            document.getElementById('detailBalance').textContent = '$' + stats.balance.toFixed(2);
+
+            // Pre-fill Payment
+            const payInput = document.getElementById('payAmount');
+            payInput.value = stats.balance > 0 ? stats.balance.toFixed(2) : 0;
+            payInput.focus();
+            payInput.select();
+
+            // Render History
+            const historyBody = document.getElementById('workHistoryBody');
+            const myLogs = attendanceLogs.filter(log => log.empId == empId && log.checkOut).sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+
+            historyBody.innerHTML = myLogs.map(log => {
+                const inTime = new Date(log.checkIn);
+                const outTime = new Date(log.checkOut);
+
+                // Raw Duration
+                const rawHrs = (outTime - inTime) / (1000 * 60 * 60);
+
+                // Payable Duration
+                const payableHrs = getPayableHours(log, emp);
+                const earned = payableHrs * emp.wage;
+
+                const isAdjusted = Math.abs(rawHrs - payableHrs) > 0.01;
+
+                return `
+                    <tr>
+                        <td>${inTime.toLocaleDateString()}</td>
+                        <td>${inTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>${outTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>
+                            ${payableHrs.toFixed(2)} 
+                            ${isAdjusted ? `<span style='color:var(--text-muted); font-size:0.8em'>(${rawHrs.toFixed(2)})</span>` : ''}
+                        </td>
+                        <td>$${earned.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (myLogs.length === 0) historyBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1rem;">No history found</td></tr>';
+
+            // Render Payments
+            const payBody = document.getElementById('paymentHistoryBody');
+            const myPayments = payments.filter(p => p.empId == empId).sort((a, b) => new Date(b.date) - new Date(a.date));
+            payBody.innerHTML = myPayments.map(p => `
+                    <tr>
+                        <td>${new Date(p.date).toLocaleString()}</td>
+                        <td style="color:var(--success)">$${p.amount.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            if (myPayments.length === 0) payBody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1rem;">No payments found</td></tr>';
+
+
+            switchDetailTab('history');
+            openModal('payrollModal');
+        }
+
+        function switchDetailTab(tabName) {
+            document.getElementById('dtab-history').classList.remove('active');
+            document.getElementById('dtab-payments').classList.remove('active');
+            document.getElementById('dsection-history').style.display = 'none';
+            document.getElementById('dsection-payments').style.display = 'none';
+
+            document.getElementById('dtab-' + tabName).classList.add('active');
+            document.getElementById('dsection-' + tabName).style.display = 'block';
+        }
+
+        function submitPayment() {
+            const amount = parseFloat(document.getElementById('payAmount').value);
+            if (!amount || amount <= 0) {
+                alert("Please enter a valid amount");
+                return;
+            }
+
+            // Record Payment
+            payments.push({
+                id: Date.now(),
+                empId: currentDetailEmpId,
+                amount: amount,
+                date: new Date().toISOString()
+            });
+
+            saveData();
+
+            // Refresh View
+            openPayrollDetails(currentDetailEmpId);
+            renderPayrollTable();
+        }
+
+        // --- DATA PERSISTENCE ---
+        function saveData(triggerUpload = true) {
+            localStorage.setItem('haraz_employees', JSON.stringify(employees));
+            localStorage.setItem('haraz_attendance', JSON.stringify(attendanceLogs));
+            localStorage.setItem('haraz_payments', JSON.stringify(payments));
+
+            if (triggerUpload) {
+                uploadToGitHub(false);
+            }
+        }
+
+        // --- DASHBOARD INTERACTIONS ---
+        function showStatDetails(type) {
+            const modalTitle = document.getElementById('listModalTitle');
+            const modalContent = document.getElementById('listModalContent');
+            modalContent.innerHTML = '';
+
+            let items = [];
+
+            if (type === 'total') {
+                modalTitle.textContent = "All Employees";
+                items = employees.map(e => ({
+                    line1: e.name,
+                    line2: e.role || 'Staff',
+                    badge: null
+                }));
+            } else if (type === 'working') {
+                modalTitle.textContent = "Currently Working";
+                const activeLogs = attendanceLogs.filter(log => !log.checkOut);
+
+                if (activeLogs.length === 0) {
+                    modalContent.innerHTML = '<p style="text-align:center; color: var(--text-muted)">No one is currently working.</p>';
+                    openModal('listModal');
+                    return;
+                }
+
+                items = activeLogs.map(log => {
+                    const emp = employees.find(e => e.id === log.empId);
+                    return {
+                        line1: emp ? emp.name : 'Unknown',
+                        line2: 'Clocked In: ' + new Date(log.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        badge: '<span class="status-badge status-active">Active</span>'
+                    };
+                });
+            } else if (type === 'ontime') {
+                modalTitle.textContent = "On Time Today";
+                const today = new Date().toDateString();
+                const onTimeLogs = attendanceLogs.filter(log => {
+                    const logDate = new Date(log.checkIn);
+                    return logDate.toDateString() === today && logDate.getHours() < SHIFT_START_HOUR;
+                });
+
+                if (onTimeLogs.length === 0) {
+                    modalContent.innerHTML = '<p style="text-align:center; color: var(--text-muted)">No one arrived on time today.</p>';
+                    openModal('listModal');
+                    return;
+                }
+
+                items = onTimeLogs.map(log => {
+                    const emp = employees.find(e => e.id === log.empId);
+                    return {
+                        line1: emp ? emp.name : 'Unknown',
+                        line2: 'Arrived at: ' + new Date(log.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        badge: '<span class="status-badge status-success">On Time</span>'
+                    };
+                });
+            }
+
+            modalContent.innerHTML = items.map(item => `
+                <div class="list-item">
+                    <div>
+                        <div style="font-weight: bold; font-size: 1.1rem;">${item.line1}</div>
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">${item.line2}</div>
+                    </div>
+                    ${item.badge || ''}
+                </div>
+            `).join('');
+
+            openModal('listModal');
+        }
+
+
+
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // --- MODALS ---
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            document.getElementById('editEmployeeId').value = '';
+            document.querySelector('form').reset();
+            document.getElementById('empWage').value = '15.00';
+        }
+
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        // --- BIO REGISTRATION LOGIC ---
+        let regTimer = null;
+
+        function toggleBioRegistration(checkbox) {
+            const section = document.getElementById('bioRegisterSection');
+            section.style.display = checkbox.checked ? 'block' : 'none';
+            // Reset state
+            document.getElementById('empBioData').value = '';
+            document.getElementById('regFingerIcon').style.color = 'var(--text-muted)';
+            document.getElementById('bioRegStatus').textContent = 'Tap & Hold scanner to register fingerprint';
+            document.getElementById('bioRegStatus').style.color = 'var(--text-muted)';
+        }
+
+        function startRegScan() {
+            const scanner = document.getElementById('regScanner');
+            const icon = document.getElementById('regFingerIcon');
+            const status = document.getElementById('bioRegStatus');
+
+            scanner.classList.add('scanning');
+            status.textContent = 'Scanning...';
+
+            regTimer = setTimeout(() => {
+                scanner.classList.remove('scanning');
+                // Success Simulation
+                const simulatedHash = 'bio_' + Date.now();
+                document.getElementById('empBioData').value = simulatedHash;
+
+                icon.style.color = 'var(--success)';
+                status.textContent = 'Fingerprint Registered!';
+                status.style.color = 'var(--success)';
+                scanner.classList.add('scan-success');
+
+                setTimeout(() => scanner.classList.remove('scan-success'), 1000);
+            }, 1000);
+        }
+
+        function endRegScan() {
+            clearTimeout(regTimer);
+            const scanner = document.getElementById('regScanner');
+            if (scanner.classList.contains('scanning')) {
+                scanner.classList.remove('scanning');
+                document.getElementById('bioRegStatus').textContent = 'Registration Cancelled';
+                setTimeout(() => {
+                    if (!document.getElementById('empBioData').value) {
+                        document.getElementById('bioRegStatus').textContent = 'Tap & Hold scanner to register fingerprint';
+                    }
+                }, 1000);
+            }
+        }
+
+        // --- EMPLOYEE MANAGEMENT ---
+        function renderEmployeeTable() {
+            const tbody = document.getElementById('employeeTable');
+            tbody.innerHTML = '';
+
+            employees.forEach(emp => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td>
+                    <div style="font-weight: 500">${emp.name}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted)">${emp.role || 'Staff'}</div>
+                </td>
+                <td>${emp.phone}</td>
+                <td>$${emp.wage}</td>
+                <td><span style="letter-spacing: 3px">••••</span></td>
+                <td>
+                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="editEmployee('${emp.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--danger); border-color: var(--danger)" onclick="deleteEmployee('${emp.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+                tbody.appendChild(tr);
+            });
+
+            // Updates counts
+            document.getElementById('totalEmployees').textContent = employees.length;
+        }
+
+        function saveEmployee(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editEmployeeId').value;
+            const name = document.getElementById('empName').value.trim();
+            const phone = document.getElementById('empPhone').value;
+            const wage = parseFloat(document.getElementById('empWage').value);
+            const passcode = document.getElementById('empPasscode').value;
+            const dutyStart = document.getElementById('empDutyStart').value;
+            const shiftEnd = document.getElementById('empShiftEnd').value;
+
+            const hasBioCheck = document.getElementById('empHasBio').checked;
+            const bioData = document.getElementById('empBioData').value;
+
+            // Validation: Duplicate Name or Passcode
+            const nameExists = employees.some(emp => emp.name.toLowerCase() === name.toLowerCase() && emp.id != id);
+            if (nameExists) {
+                alert("An employee with this name already exists. Please use a unique name.");
+                return;
+            }
+
+            const passcodeExists = employees.some(emp => emp.passcode === passcode && emp.id != id);
+            if (passcodeExists) {
+                alert("This passcode is already assigned to another employee.");
+                return;
+            }
+
+            // Validation: If bio checked, must have registered
+            if (hasBioCheck && !bioData) {
+                alert("Please register a fingerprint by pressing holding the scanner icon, or uncheck Biometric Login.");
+                return;
+            }
+
+            if (id) {
+                // Edit
+                const idx = employees.findIndex(emp => emp.id == id);
+                employees[idx] = { ...employees[idx], name, phone, wage, passcode, dutyStart, shiftEnd, hasBio: hasBioCheck, bioData: bioData }; // Keep hasBio for simple logic, but can rely on 'bioData' existence
+            } else {
+                // Add New
+                const newEmp = {
+                    id: Date.now().toString(),
+                    name, phone, wage, passcode,
+                    dutyStart, shiftEnd,
+                    hasBio: hasBioCheck,
+                    bioData: bioData,
+                    createdAt: new Date().toISOString()
+                };
+                employees.push(newEmp);
+            }
+
+            saveData(); // This triggers auto-upload
+            closeModal('employeeModal');
+            renderEmployeeTable();
+            renderDashboard();
+        }
+
+        function editEmployee(id) {
+            const emp = employees.find(e => e.id == id);
+            document.getElementById('editEmployeeId').value = emp.id;
+            document.getElementById('empName').value = emp.name;
+            document.getElementById('empPhone').value = emp.phone;
+            // email removed
+            document.getElementById('empWage').value = emp.wage;
+            document.getElementById('empPasscode').value = emp.passcode;
+            document.getElementById('empDutyStart').value = emp.dutyStart || '';
+            document.getElementById('empShiftEnd').value = emp.shiftEnd || '';
+
+            // Handle Bio UI
+            const chk = document.getElementById('empHasBio');
+            chk.checked = emp.hasBio;
+            toggleBioRegistration(chk);
+
+            if (emp.hasBio) {
+                // Fake a loaded state
+                document.getElementById('empBioData').value = emp.bioData || 'existing_hash';
+                document.getElementById('regFingerIcon').style.color = 'var(--success)';
+                document.getElementById('bioRegStatus').textContent = 'Fingerprint Registered';
+                document.getElementById('bioRegStatus').style.color = 'var(--success)';
+            }
+
+            openModal('employeeModal');
+        }
+
+        function deleteEmployee(id) {
+            if (confirm('Are you sure you want to delete this employee?')) {
+                employees = employees.filter(e => e.id !== id);
+                saveData();
+                renderEmployeeTable();
+                renderDashboard();
+            }
+        }
+
+
+        // --- KIOSK / KEYPAD ---
+        let kioskMode = 'clock'; // 'clock' only for now
+        let currentPasscode = '';
+        let scanTimer = null;
+
+        function openKeypad(mode) {
+            kioskMode = mode;
+            currentPasscode = '';
+            updateKeypadDisplay();
+            document.getElementById('keypadMsg').textContent = '';
+            document.getElementById('keypadModal').classList.add('open');
+
+            // Switch to passcode by default
+            switchTab('passcode');
+
+            // Populate Demo Select for Biometric
+            const bioSelect = document.getElementById('bioDemoSelect');
+            bioSelect.innerHTML = '<option value="">-- Touch Sensor As... --</option>';
+            employees.filter(e => e.hasBio).forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e.id;
+                opt.textContent = e.name;
+                bioSelect.appendChild(opt);
+            });
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('section-' + tab).style.display = 'block';
+        }
+
+        function closeKeypad() {
+            document.getElementById('keypadModal').classList.remove('open');
+        }
+
+        function keyPress(num) {
+            if (num === 'clear') {
+                currentPasscode = '';
+            } else {
+                if (currentPasscode.length < 6) {
+                    currentPasscode += num;
+                }
+            }
+            updateKeypadDisplay();
+            document.getElementById('keypadMsg').textContent = '';
+
+            // Auto-detect if passcode matches an employee
+            const emp = employees.find(e => e.passcode === currentPasscode);
+            if (emp) {
+                // Determine 'Clock In' or 'Clock Out' based on current state for message
+                // But processLogin handles that logic.
+                processLogin(emp);
+
+                // Reset immediately to avoid double submissions if user keeps pressing
+                currentPasscode = '';
+                updateKeypadDisplay();
+            }
+        }
+
+        function updateKeypadDisplay() {
+            const display = document.getElementById('keypadDisplay');
+            // Show dots instead of numbers
+            display.value = currentPasscode.replace(/./g, '•');
+        }
+
+        function submitPasscode() {
+            const msgEl = document.getElementById('keypadMsg');
+            const emp = employees.find(e => e.passcode === currentPasscode);
+
+            if (emp) {
+                processLogin(emp);
+                currentPasscode = '';
+                updateKeypadDisplay();
+            } else {
+                msgEl.textContent = 'Invalid Passcode';
+                msgEl.style.color = 'var(--danger)';
+                currentPasscode = '';
+                updateKeypadDisplay();
+            }
+        }
+
+        // Simulates Physical Scanner Hardware
+        function startScan() {
+            const scanner = document.getElementById('scannerEffect');
+            const status = document.getElementById('bioStatus');
+            const selectedEmpId = document.getElementById('bioDemoSelect').value;
+
+            scanner.classList.add('scanning');
+            status.textContent = 'Scanning...';
+
+            scanTimer = setTimeout(() => {
+                scanner.classList.remove('scanning');
+
+                if (selectedEmpId) {
+                    const emp = employees.find(e => e.id == selectedEmpId);
+                    processLogin(emp);
+                } else {
+                    status.textContent = 'Fingerprint Not Recognized';
+                    status.style.color = 'var(--danger)';
+                    scanner.classList.add('scan-error');
+                    setTimeout(() => {
+                        scanner.classList.remove('scan-error');
+                        status.textContent = 'Press and hold to scan';
+                        status.style.color = 'var(--text-muted)';
+                    }, 1500);
+                }
+            }, 1500); // 1.5s scan duration
+        }
+
+        function endScan() {
+            clearTimeout(scanTimer);
+            const scanner = document.getElementById('scannerEffect');
+            if (scanner.classList.contains('scanning')) {
+                scanner.classList.remove('scanning');
+                document.getElementById('bioStatus').textContent = 'Scan Cancelled';
+                setTimeout(() => {
+                    document.getElementById('bioStatus').textContent = 'Press and hold to scan';
+                }, 1000);
+            }
+        }
+
+        function processLogin(emp) {
+            const msgEl = document.getElementById('keypadMsg');
+            const bioStatus = document.getElementById('bioStatus');
+
+            // Logic for Clock In / Out
+            // Find last log for this employee that doesn't have a checkout time
+            const lastLogIdx = attendanceLogs.findIndex(log => log.empId === emp.id && !log.checkOut);
+
+            let message = '';
+            let color = '';
+
+            if (lastLogIdx === -1) {
+                // Clock In
+                const newLog = {
+                    id: Date.now(),
+                    empId: emp.id,
+                    empName: emp.name,
+                    checkIn: new Date().toISOString(),
+                    checkOut: null
+                };
+                attendanceLogs.push(newLog);
+
+                message = `Welcome, ${emp.name}! (Clocked In)`;
+                color = 'var(--success)';
+            } else {
+                // Clock Out
+                attendanceLogs[lastLogIdx].checkOut = new Date().toISOString();
+
+                message = `Goodbye, ${emp.name}! (Clocked Out)`;
+                color = 'var(--warning)';
+            }
+
+            // Passcode Feedback
+            msgEl.textContent = message;
+            msgEl.style.color = color;
+
+            // Biometric Feedback
+            bioStatus.textContent = message;
+            bioStatus.style.color = color;
+            document.getElementById('scannerEffect').classList.add('scan-success');
+
+            saveData();
+            renderDashboard();
+            renderPayrollTable(); // Refresh payroll immediately to show updated earnings
+
+            // Close modal immediately (with very slight delay for visual confirmation)
+            setTimeout(() => {
+                closeKeypad();
+                // Reset Scanner Effect
+                document.getElementById('scannerEffect').classList.remove('scan-success');
+                bioStatus.textContent = 'Press and hold to scan';
+                bioStatus.style.color = 'var(--text-muted)';
+                msgEl.textContent = '';
+            }, 500);
+        }
+
+
+
+
+        function renderEmployeeTable() {
+            const tbody = document.getElementById('employeeTable');
+            tbody.innerHTML = employees.map(emp => `
+                <tr>
+                    <td>${emp.name}</td>
+                    <td>${emp.phone}</td>
+                    <td>${emp.email || '-'}</td>
+                    <td>$${emp.wage}/hr</td>
+                    <td><span style="filter: blur(4px);">${emp.passcode}</span></td>
+                    <td>
+                        <button class="btn btn-outline" style="padding: 0.4rem;" onclick="editEmployee('${emp.id}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-outline" style="padding: 0.4rem;" onclick="deleteEmployee('${emp.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('totalEmployees').textContent = employees.length;
+        }
+
+        function deleteEmployee(id) {
+            if (confirm('Are you sure you want to remove this employee?')) {
+                employees = employees.filter(e => e.id != id);
+                saveData();
+                renderEmployeeTable();
+                renderDashboard();
+            }
+        }
+
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            document.getElementById('totalEmployees').textContent = employees.length;
+
+            // Active Employees (No Checkout time on their last active log)
+            const activeLogs = attendanceLogs.filter(log => !log.checkOut);
+            document.getElementById('activeEmployees').textContent = activeLogs.length;
+
+            // On Time (Clocked in today before SHIFT_START_HOUR)
+            const today = new Date().toDateString();
+            const onTimeCount = attendanceLogs.filter(log => {
+                const logDate = new Date(log.checkIn);
+                return logDate.toDateString() === today && logDate.getHours() < SHIFT_START_HOUR;
+            }).length;
+            document.getElementById('onTimeEmployees').textContent = onTimeCount;
+
+            // Live Table
+            const liveTbody = document.getElementById('liveAttendanceTable');
+            if (activeLogs.length === 0) {
+                liveTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted)">No employees currently working</td></tr>`;
+            } else {
+                liveTbody.innerHTML = activeLogs.map(log => {
+                    const emp = employees.find(e => e.id === log.empId);
+                    if (!emp) return '';
+                    const checkInTime = new Date(log.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return `
+                        <tr>
+                            <td>${emp.name}</td>
+                            <td>Barista/Staff</td>
+                            <td>${checkInTime}</td>
+                            <td><span class="status-badge status-active">Clocked In</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // --- PAYROLL ---
+        function calculatePayroll() {
+            const startStr = document.getElementById('payrollStart').value;
+            const endStr = document.getElementById('payrollEnd').value;
+
+            if (!startStr || !endStr) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            // Set end to end of day
+            end.setHours(23, 59, 59);
+
+            const tbody = document.getElementById('payrollTable');
+
+            // Group logs by employee
+            const report = {};
+
+            employees.forEach(emp => {
+                report[emp.id] = {
+                    name: emp.name,
+                    wage: emp.wage,
+                    totalHours: 0
+                };
+            });
+
+            attendanceLogs.forEach(log => {
+                const logIn = new Date(log.checkIn);
+                if (logIn >= start && logIn <= end && log.checkOut) {
+                    const emp = employees.find(e => e.id === log.empId);
+                    if (emp) {
+                        const hours = getPayableHours(log, emp);
+                        if (report[log.empId]) {
+                            report[log.empId].totalHours += hours;
+                        }
+                    }
+                }
+            });
+
+            let html = '';
+            for (const empId in report) {
+                const data = report[empId];
+                const totalPay = data.totalHours * data.wage;
+
+                if (data.totalHours > 0) {
+                    html += `
+                        <tr>
+                            <td>${data.name}</td>
+                            <td>${data.totalHours.toFixed(2)} hrs</td>
+                            <td>$${data.wage}/hr</td>
+                            <td style="color: var(--success); font-weight: bold;">$${totalPay.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            if (html === '') {
+                html = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted)">No completed shifts found in this range</td></tr>`;
+            }
+
+            tbody.innerHTML = html;
+        }
+
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.log('Service Worker registration failed', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
