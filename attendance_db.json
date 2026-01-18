@@ -1,5 +1,18 @@
 {
-  "employees": [],
+  "employees": [
+    {
+      "id": "1768760633450",
+      "name": "ahsan",
+      "phone": "23",
+      "wage": 15,
+      "passcode": "1234",
+      "dutyStart": "",
+      "shiftEnd": "",
+      "hasBio": false,
+      "bioData": "",
+      "createdAt": "2026-01-18T18:23:53.450Z"
+    }
+  ],
   "attendanceLogs": [
     {
       "id": 1768715320812,
@@ -63,5 +76,5 @@
       "date": "1/17/2026"
     }
   ],
-  "lastUpdated": "2026-01-18T18:22:44.870Z"
+  "lastUpdated": "2026-01-18T18:23:53.450Z"
 }
