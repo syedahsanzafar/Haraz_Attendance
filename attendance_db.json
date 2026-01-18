@@ -11,6 +11,18 @@
       "hasBio": true,
       "bioData": "bio_1768759853070",
       "createdAt": "2026-01-18T18:10:54.589Z"
+    },
+    {
+      "id": "1768760244934",
+      "name": "ahsan",
+      "phone": "123",
+      "wage": 15,
+      "passcode": "123",
+      "dutyStart": "23:11",
+      "shiftEnd": "23:50",
+      "hasBio": true,
+      "bioData": "bio_1768760243685",
+      "createdAt": "2026-01-18T18:17:24.934Z"
     }
   ],
   "attendanceLogs": [
@@ -55,5 +67,5 @@
       "date": "1/17/2026"
     }
   ],
-  "lastUpdated": "2026-01-18T18:16:45.186Z"
+  "lastUpdated": "2026-01-18T18:17:24.934Z"
 }
