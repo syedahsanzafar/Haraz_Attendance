@@ -860,6 +860,19 @@
                         <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fab fa-github" style="color: var(--text-main)"></i> GitHub Database Sync
                         </h4>
+
+                        <!-- Token Input -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label style="font-size: 0.85rem;">GitHub Personal Access Token</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="password" class="form-control" id="githubTokenInput"
+                                    placeholder="Enter your GitHub Token" style="font-size: 0.9rem;">
+                                <button class="btn btn-outline" onclick="saveGithubToken()">Save</button>
+                            </div>
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">Token is saved locally in your
+                                browser.</small>
+                        </div>
+
                         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
                             Manage your cloud backup manually.
                         </p>
@@ -1166,10 +1179,11 @@
         // Constants
         const SHIFT_START_HOUR = 9; // 9 AM is considered start time
         // GitHub Config
-        const GITHUB_TOKEN = "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";
+        // GitHub Config
+        let GITHUB_TOKEN = localStorage.getItem('haraz_github_token') || "";
         const REPO_OWNER = "syedahsanzafar";
         const REPO_NAME = "Haraz_Attendance";
-        const FILE_PATH = "attendance_db.json";
+        const FILE_PATH = "db.json";
         const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
 
         // Initialization
@@ -1178,9 +1192,26 @@
             setInterval(updateClock, 1000);
             renderDashboard();
             renderEmployeeTable();
-            checkSyncStatus(); // Check for updates on load
-            // updateConnectionStatus(); // Removed in favor of dbStatus
+            // Auto-sync removed
+
+            // Load Saved Token
+            const tokenInput = document.getElementById('githubTokenInput');
+            if (tokenInput) tokenInput.value = GITHUB_TOKEN;
         });
+
+        function saveGithubToken() {
+            const token = document.getElementById('githubTokenInput').value.trim();
+            if (token) {
+                localStorage.setItem('haraz_github_token', token);
+                GITHUB_TOKEN = token;
+                alert("GitHub Token saved securely in your browser!");
+                checkSyncStatus();
+            } else {
+                localStorage.removeItem('haraz_github_token');
+                GITHUB_TOKEN = "";
+                alert("GitHub Token removed.");
+            }
+        }
 
         // --- NAVIGATION ---
         function showSection(sectionId, linkElement) {
@@ -1298,6 +1329,10 @@
         }
 
         async function uploadToGitHub(showAlert = false) {
+            if (!GITHUB_TOKEN) {
+                alert("Please enter and save your GitHub Token in the System Settings tab first.");
+                return;
+            }
             const statusEl = document.getElementById('githubStatus');
             if (statusEl) statusEl.textContent = 'Uploading to GitHub...';
 
@@ -1381,6 +1416,10 @@
         }
 
         async function downloadFromGitHub(showAlert = false) {
+            if (!GITHUB_TOKEN) {
+                alert("Please enter and save your GitHub Token in the System Settings tab first.");
+                return;
+            }
             const statusEl = document.getElementById('githubStatus');
             if (statusEl) statusEl.textContent = 'Downloading from GitHub...';
 
