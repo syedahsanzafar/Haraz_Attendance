@@ -1,30 +1,5 @@
 {
-  "employees": [
-    {
-      "id": "1768759854589",
-      "name": "ahsan",
-      "phone": "123",
-      "wage": 15,
-      "passcode": "123",
-      "dutyStart": "11:01",
-      "shiftEnd": "01:00",
-      "hasBio": true,
-      "bioData": "bio_1768759853070",
-      "createdAt": "2026-01-18T18:10:54.589Z"
-    },
-    {
-      "id": "1768760244934",
-      "name": "ahsan",
-      "phone": "123",
-      "wage": 15,
-      "passcode": "123",
-      "dutyStart": "23:11",
-      "shiftEnd": "23:50",
-      "hasBio": true,
-      "bioData": "bio_1768760243685",
-      "createdAt": "2026-01-18T18:17:24.934Z"
-    }
-  ],
+  "employees": [],
   "attendanceLogs": [
     {
       "id": 1768715320812,
@@ -88,5 +63,5 @@
       "date": "1/17/2026"
     }
   ],
-  "lastUpdated": "2026-01-18T18:22:36.059Z"
+  "lastUpdated": "2026-01-18T18:22:44.870Z"
 }
