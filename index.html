@@ -998,12 +998,15 @@
                         Tap & Hold scanner to register fingerprint
                     </p>
 
-                    <div class="scanner-container" style="padding: 1rem;" id="regScanner" onmousedown="startRegScan()"
-                        onmouseup="endRegScan()" ontouchstart="startRegScan()" ontouchend="endRegScan()">
+                    <div class="scanner-container" style="padding: 1rem;" id="regScanner">
                         <div class="scanner-ring" style="width: 80px; height: 80px;"></div>
                         <i class="fas fa-fingerprint" style="font-size: 3rem; color: var(--text-muted);"
                             id="regFingerIcon"></i>
                     </div>
+                    <button type="button" class="btn btn-outline" onclick="registerBiometricCredential()"
+                        style="margin-top:0.5rem">
+                        <i class="fas fa-fingerprint"></i> Register Device Fingerprint
+                    </button>
 
                     <input type="hidden" id="empBioData"> <!-- Stores 'Simulated' Bio Data -->
                 </div>
@@ -1059,22 +1062,20 @@
 
             <!-- Biometric Section -->
             <div id="section-biometric" style="display: none;">
-                <div class="scanner-container" id="scannerEffect" onmousedown="startScan()" onmouseup="endScan()"
-                    ontouchstart="startScan()" ontouchend="endScan()">
+                <div class="scanner-container" id="scannerEffect">
                     <div class="scanner-ring"></div>
                     <div class="scan-line"></div>
                     <i class="fas fa-fingerprint fingerprint-icon"></i>
                 </div>
                 <div style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
-                    <p id="bioStatus">Press and hold to scan</p>
+                    <p id="bioStatus">Press the button below to scan</p>
                 </div>
 
-                <!-- Demo Selector -->
-                <div class="form-group">
-                    <label>Simulate Fingerprint For (Demo):</label>
-                    <select class="form-control" id="bioDemoSelect">
-                        <option value="">-- Choose Staff --</option>
-                    </select>
+                <div style="display: flex; justify-content: center;">
+                    <button class="btn btn-primary" onclick="authenticateBiometric()"
+                        style="padding: 1rem 2rem; border-radius: 50px;">
+                        <i class="fas fa-fingerprint"></i> Scan Fingerprint
+                    </button>
                 </div>
             </div>
 
@@ -1986,127 +1987,139 @@
         }
 
 
-        // --- KIOSK / KEYPAD ---
-        let kioskMode = 'clock'; // 'clock' only for now
-        let currentPasscode = '';
-        let scanTimer = null;
+        // --- WEB AUTHENTICATION (Biometrics) ---
 
-        function openKeypad(mode) {
-            kioskMode = mode;
-            currentPasscode = '';
-            updateKeypadDisplay();
-            document.getElementById('keypadMsg').textContent = '';
-            document.getElementById('keypadModal').classList.add('open');
-
-            // Switch to passcode by default
-            switchTab('passcode');
-
-            // Populate Demo Select for Biometric
-            const bioSelect = document.getElementById('bioDemoSelect');
-            bioSelect.innerHTML = '<option value="">-- Touch Sensor As... --</option>';
-            employees.filter(e => e.hasBio).forEach(e => {
-                const opt = document.createElement('option');
-                opt.value = e.id;
-                opt.textContent = e.name;
-                bioSelect.appendChild(opt);
-            });
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
-
-            document.getElementById('tab-' + tab).classList.add('active');
-            document.getElementById('section-' + tab).style.display = 'block';
-        }
-
-        function closeKeypad() {
-            document.getElementById('keypadModal').classList.remove('open');
-        }
-
-        function keyPress(num) {
-            if (num === 'clear') {
-                currentPasscode = '';
-            } else {
-                if (currentPasscode.length < 6) {
-                    currentPasscode += num;
-                }
+        // Utils for Base64URL encoding/decoding
+        function bufferToBase64url(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let string = "";
+            for (let i = 0; i < bytes.byteLength; i++) {
+                string += String.fromCharCode(bytes[i]);
             }
-            updateKeypadDisplay();
-            document.getElementById('keypadMsg').textContent = '';
+            return btoa(string).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        }
 
-            // Auto-detect if passcode matches an employee
-            const emp = employees.find(e => e.passcode === currentPasscode);
-            if (emp) {
-                // Determine 'Clock In' or 'Clock Out' based on current state for message
-                // But processLogin handles that logic.
-                processLogin(emp);
-
-                // Reset immediately to avoid double submissions if user keeps pressing
-                currentPasscode = '';
-                updateKeypadDisplay();
+        function base64urlToBuffer(base64url) {
+            const padding = '=='.substring(0, (4 - base64url.length % 4) % 4);
+            const base64 = (base64url + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
             }
+            return outputArray.buffer;
         }
 
-        function updateKeypadDisplay() {
-            const display = document.getElementById('keypadDisplay');
-            // Show dots instead of numbers
-            display.value = currentPasscode.replace(/./g, '•');
-        }
+        // Registration (Add Employee)
+        async function registerBiometricCredential() {
+            const statusEl = document.getElementById('bioRegStatus');
+            const icon = document.getElementById('regFingerIcon');
 
-        function submitPasscode() {
-            const msgEl = document.getElementById('keypadMsg');
-            const emp = employees.find(e => e.passcode === currentPasscode);
+            if (!window.PublicKeyCredential) {
+                alert("Biometrics not supported on this device/browser (or not on HTTPS).");
+                return;
+            }
 
-            if (emp) {
-                processLogin(emp);
-                currentPasscode = '';
-                updateKeypadDisplay();
-            } else {
-                msgEl.textContent = 'Invalid Passcode';
-                msgEl.style.color = 'var(--danger)';
-                currentPasscode = '';
-                updateKeypadDisplay();
+            statusEl.textContent = "Please scan your fingerprint on the device sensor...";
+            statusEl.style.color = "var(--primary)";
+            icon.style.color = "var(--primary)";
+
+            // Random challenge
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge);
+
+            const userId = new Uint8Array(16);
+            window.crypto.getRandomValues(userId);
+
+            const publicKey = {
+                challenge: challenge,
+                rp: { name: "Haraz Attendance" },
+                user: {
+                    id: userId,
+                    name: "employee_ref_" + Date.now(),
+                    displayName: "Employee"
+                },
+                pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                authenticatorSelection: {
+                    authenticatorAttachment: "platform", // Use built-in sensor
+                    userVerification: "required"
+                },
+                timeout: 60000
+            };
+
+            try {
+                const credential = await navigator.credentials.create({ publicKey });
+
+                // Success
+                const credId = bufferToBase64url(credential.rawId);
+                document.getElementById('empBioData').value = credId;
+
+                icon.style.color = 'var(--success)';
+                statusEl.textContent = 'Fingerprint Registered Successfully!';
+                statusEl.style.color = 'var(--success)';
+                document.getElementById('regScanner').classList.add('scan-success');
+
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = 'Registration Failed: ' + err.message;
+                statusEl.style.color = 'var(--danger)';
+                icon.style.color = 'var(--danger)';
             }
         }
 
-        // Simulates Physical Scanner Hardware
-        function startScan() {
-            const scanner = document.getElementById('scannerEffect');
-            const status = document.getElementById('bioStatus');
-            const selectedEmpId = document.getElementById('bioDemoSelect').value;
+        // Authentication (Check In/Out)
+        async function authenticateBiometric() {
+            if (!window.PublicKeyCredential) {
+                alert("Biometrics not supported or not HTTPS.");
+                return;
+            }
 
-            scanner.classList.add('scanning');
-            status.textContent = 'Scanning...';
+            const statusEl = document.getElementById('bioStatus');
+            statusEl.textContent = "Activate device sensor to scan...";
 
-            scanTimer = setTimeout(() => {
-                scanner.classList.remove('scanning');
+            // Collect all registered Credential IDs to allow 1:N matching
+            // (Browser will see which one matches the finger used)
+            const allowCredentials = employees
+                .filter(e => e.bioData && e.hasBio)
+                .map(e => ({
+                    id: base64urlToBuffer(e.bioData),
+                    type: 'public-key'
+                }));
 
-                if (selectedEmpId) {
-                    const emp = employees.find(e => e.id == selectedEmpId);
+            if (allowCredentials.length === 0) {
+                statusEl.textContent = "No employees have biometric data registered on this device.";
+                statusEl.style.color = "var(--danger)";
+                return;
+            }
+
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge);
+
+            const publicKey = {
+                challenge: challenge,
+                allowCredentials: allowCredentials,
+                userVerification: "required",
+                timeout: 60000
+            };
+
+            try {
+                const assertion = await navigator.credentials.get({ publicKey });
+
+                // Find which employee matches the returned credential ID
+                const matchedCredId = bufferToBase64url(assertion.rawId);
+                const emp = employees.find(e => e.bioData === matchedCredId);
+
+                if (emp) {
                     processLogin(emp);
                 } else {
-                    status.textContent = 'Fingerprint Not Recognized';
-                    status.style.color = 'var(--danger)';
-                    scanner.classList.add('scan-error');
-                    setTimeout(() => {
-                        scanner.classList.remove('scan-error');
-                        status.textContent = 'Press and hold to scan';
-                        status.style.color = 'var(--text-muted)';
-                    }, 1500);
+                    statusEl.textContent = "Fingerprint recognized, but employee not found.";
+                    statusEl.style.color = "var(--danger)";
                 }
-            }, 1500); // 1.5s scan duration
-        }
 
-        function endScan() {
-            clearTimeout(scanTimer);
-            const scanner = document.getElementById('scannerEffect');
-            if (scanner.classList.contains('scanning')) {
-                scanner.classList.remove('scanning');
-                document.getElementById('bioStatus').textContent = 'Scan Cancelled';
-                setTimeout(() => {
-                    document.getElementById('bioStatus').textContent = 'Press and hold to scan';
-                }, 1000);
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Scan failed or cancelled.";
+                statusEl.style.color = "var(--text-muted)";
             }
         }
 
@@ -2115,7 +2128,6 @@
             const bioStatus = document.getElementById('bioStatus');
 
             // Logic for Clock In / Out
-            // Find last log for this employee that doesn't have a checkout time
             const lastLogIdx = attendanceLogs.findIndex(log => log.empId === emp.id && !log.checkOut);
 
             let message = '';
@@ -2143,31 +2155,113 @@
             }
 
             // Passcode Feedback
-            msgEl.textContent = message;
-            msgEl.style.color = color;
+            if (msgEl) {
+                msgEl.textContent = message;
+                msgEl.style.color = color;
+            }
 
             // Biometric Feedback
-            bioStatus.textContent = message;
-            bioStatus.style.color = color;
-            document.getElementById('scannerEffect').classList.add('scan-success');
+            if (bioStatus) {
+                bioStatus.textContent = message;
+                bioStatus.style.color = color;
+                document.getElementById('scannerEffect').classList.add('scan-success');
+            }
 
             saveData();
             renderDashboard();
-            renderPayrollTable(); // Refresh payroll immediately to show updated earnings
+            renderPayrollTable();
 
-            // Close modal immediately (with very slight delay for visual confirmation)
+            // Close modal
             setTimeout(() => {
                 closeKeypad();
-                // Reset Scanner Effect
-                document.getElementById('scannerEffect').classList.remove('scan-success');
-                bioStatus.textContent = 'Press and hold to scan';
-                bioStatus.style.color = 'var(--text-muted)';
-                msgEl.textContent = '';
-            }, 500);
+                if (document.getElementById('scannerEffect')) {
+                    document.getElementById('scannerEffect').classList.remove('scan-success');
+                }
+                if (bioStatus) {
+                    bioStatus.textContent = 'Press button below to scan';
+                    bioStatus.style.color = 'var(--text-muted)';
+                }
+                if (msgEl) msgEl.textContent = '';
+            }, 1000);
         }
 
 
 
+
+        // --- KIOSK / KEYPAD ---
+        let kioskMode = 'clock';
+        let currentPasscode = '';
+
+        function openKeypad(mode) {
+            kioskMode = mode;
+            currentPasscode = '';
+            updateKeypadDisplay();
+            const msgEl = document.getElementById('keypadMsg');
+            if (msgEl) msgEl.textContent = '';
+            document.getElementById('keypadModal').classList.add('open');
+
+            // Switch to passcode by default
+            switchTab('passcode');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+
+            const tabEl = document.getElementById('tab-' + tab);
+            const secEl = document.getElementById('section-' + tab);
+
+            if (tabEl) tabEl.classList.add('active');
+            if (secEl) secEl.style.display = 'block';
+        }
+
+        function closeKeypad() {
+            document.getElementById('keypadModal').classList.remove('open');
+        }
+
+        function keyPress(num) {
+            if (num === 'clear') {
+                currentPasscode = '';
+            } else {
+                if (currentPasscode.length < 6) {
+                    currentPasscode += num;
+                }
+            }
+            updateKeypadDisplay();
+            const msgEl = document.getElementById('keypadMsg');
+            if (msgEl) msgEl.textContent = '';
+
+            // Auto-detect if passcode matches an employee
+            const emp = employees.find(e => e.passcode === currentPasscode);
+            if (emp) {
+                processLogin(emp);
+                currentPasscode = '';
+                updateKeypadDisplay();
+            }
+        }
+
+        function updateKeypadDisplay() {
+            const display = document.getElementById('keypadDisplay');
+            if (display) display.value = currentPasscode.replace(/./g, '•');
+        }
+
+        function submitPasscode() {
+            const msgEl = document.getElementById('keypadMsg');
+            const emp = employees.find(e => e.passcode === currentPasscode);
+
+            if (emp) {
+                processLogin(emp);
+                currentPasscode = '';
+                updateKeypadDisplay();
+            } else {
+                if (msgEl) {
+                    msgEl.textContent = 'Invalid Passcode';
+                    msgEl.style.color = 'var(--danger)';
+                }
+                currentPasscode = '';
+                updateKeypadDisplay();
+            }
+        }
 
         function renderEmployeeTable() {
             const tbody = document.getElementById('employeeTable');
