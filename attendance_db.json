@@ -1,109 +1,30 @@
 {
-  "customers": [
+  "employees": [
     {
-      "name": "Customer A",
+      "id": "1768759854589",
+      "name": "ahsan",
       "phone": "123",
-      "email": "customerA@example.com"
-    },
-    {
-      "name": "Customer B",
-      "phone": "456",
-      "email": ""
-    },
-    {
-      "name": "Ayesha Khayam",
-      "phone": "4438256690",
-      "email": ""
+      "wage": 15,
+      "passcode": "123",
+      "dutyStart": "11:01",
+      "shiftEnd": "01:00",
+      "hasBio": true,
+      "bioData": "bio_1768759853070",
+      "createdAt": "2026-01-18T18:10:54.589Z"
     }
   ],
-  "inventory": [
+  "attendanceLogs": [
     {
-      "name": "Haraz Latte",
-      "price": 5.5
+      "id": 1768715320812,
+      "empId": "1768715307271",
+      "checkIn": "2026-01-18T05:48:40.811Z",
+      "checkOut": "2026-01-18T05:48:51.269Z"
     },
     {
-      "name": "Espresso",
-      "price": 3
-    },
-    {
-      "name": "Mocha",
-      "price": 6
-    },
-    {
-      "name": "bee bites",
-      "price": 45
-    },
-    {
-      "name": "Mosaic cake",
-      "price": 60
-    },
-    {
-      "name": "Kunafah",
-      "price": 30
-    },
-    {
-      "name": "spinach pastry",
-      "price": 10
-    },
-    {
-      "name": "criossant",
-      "price": 5
-    },
-    {
-      "name": "cookies",
-      "price": 5
-    }
-  ],
-  "invoices": [
-    {
-      "id": "1000",
-      "date": "1/17/2026",
-      "customer": {
-        "name": "Ayesha Khayam",
-        "phone": "4438256690",
-        "email": ""
-      },
-      "items": [
-        {
-          "name": "bee bites",
-          "qty": 7,
-          "price": 45,
-          "subtotal": 315
-        },
-        {
-          "name": "Mosaic cake",
-          "qty": 5,
-          "price": 60,
-          "subtotal": 300
-        },
-        {
-          "name": "Kunafah",
-          "qty": 20,
-          "price": 30,
-          "subtotal": 600
-        },
-        {
-          "name": "spinach pastry",
-          "qty": 50,
-          "price": 10,
-          "subtotal": 500
-        },
-        {
-          "name": "criossant",
-          "qty": 30,
-          "price": 5,
-          "subtotal": 150
-        },
-        {
-          "name": "cookies",
-          "qty": 51,
-          "price": 5,
-          "subtotal": 255
-        }
-      ],
-      "delivery": 20,
-      "total": 2140,
-      "paid": 0
+      "id": 1768716613219,
+      "empId": "1768715307271",
+      "checkIn": "2026-01-18T06:10:13.219Z",
+      "checkOut": "2026-01-18T06:14:40.517Z"
     }
   ],
   "payments": [
@@ -112,5 +33,6 @@
       "amount": 1000,
       "date": "1/17/2026"
     }
-  ]
+  ],
+  "lastUpdated": "2026-01-18T18:10:54.590Z"
 }
