@@ -1,1 +1,1 @@
-{"employees":[],"attendanceLogs":[{"id":1768760704523,"empId":"1768760698772","empName":"ahsan","checkIn":"2026-01-18T18:25:04.523Z","checkOut":null}],"payments":[],"lastUpdated":"2026-01-18T18:44:52.306Z"}
+{"employees":[{"id":"1768761967341","name":"A","phone":"1","wage":15,"passcode":"1234","dutyStart":"","shiftEnd":"","hasBio":false,"bioData":"","createdAt":"2026-01-18T18:46:07.341Z"}],"attendanceLogs":[],"payments":[],"lastUpdated":"2026-01-18T18:46:07.341Z"}
