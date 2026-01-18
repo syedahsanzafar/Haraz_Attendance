@@ -1214,6 +1214,10 @@
         }
 
         // --- NAVIGATION ---
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+
         function showSection(sectionId, linkElement) {
             // Auto Fullscreen
             if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
