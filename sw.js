@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attendance-sys-v1';
+const CACHE_NAME = 'attendance-sys-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -51,7 +51,7 @@ self.addEventListener('fetch', (event) => {
         return fetch(event.request).then(
           (response) => {
             // Check if we received a valid response
-            if(!response || response.status !== 200 || response.type !== 'basic') {
+            if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
