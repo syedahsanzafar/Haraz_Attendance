@@ -31,7 +31,7 @@
       "empId": "1768759854589",
       "empName": "ahsan",
       "checkIn": "2026-01-18T18:11:21.467Z",
-      "checkOut": null
+      "checkOut": "2026-01-18T18:11:24.941Z"
     }
   ],
   "payments": [
@@ -41,5 +41,5 @@
       "date": "1/17/2026"
     }
   ],
-  "lastUpdated": "2026-01-18T18:11:21.467Z"
+  "lastUpdated": "2026-01-18T18:11:24.941Z"
 }
