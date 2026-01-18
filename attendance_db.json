@@ -13,7 +13,15 @@
       "createdAt": "2026-01-18T18:24:58.772Z"
     }
   ],
-  "attendanceLogs": [],
+  "attendanceLogs": [
+    {
+      "id": 1768760704523,
+      "empId": "1768760698772",
+      "empName": "ahsan",
+      "checkIn": "2026-01-18T18:25:04.523Z",
+      "checkOut": null
+    }
+  ],
   "payments": [],
-  "lastUpdated": "2026-01-18T18:24:58.772Z"
+  "lastUpdated": "2026-01-18T18:25:04.523Z"
 }
