@@ -389,6 +389,8 @@
             border: var(--glass-border);
             transform: translateY(20px);
             transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-overlay.open .modal {
@@ -973,16 +975,7 @@
                     <input type="number" class="form-control" id="empPasscode" required>
                 </div>
 
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div>
-                        <label>Duty Start</label>
-                        <input type="time" class="form-control" id="empDutyStart">
-                    </div>
-                    <div>
-                        <label>Shift End</label>
-                        <input type="time" class="form-control" id="empShiftEnd">
-                    </div>
-                </div>
+
 
                 <div class="form-group">
                     <label style="display:flex; align-items:center; gap: 0.5rem; cursor: pointer;">
@@ -1566,20 +1559,6 @@
 
             let effectiveCheckIn = checkIn;
 
-            // Apply Duty Start Logic
-            if (emp.dutyStart) {
-                const [h, m] = emp.dutyStart.split(':');
-                const dutyStart = new Date(checkIn); // Create date object on same day as checkIn
-                dutyStart.setHours(parseInt(h), parseInt(m), 0, 0);
-
-                // If they clocked in earlier than duty start, pay starts at duty start
-                if (checkIn < dutyStart) {
-                    effectiveCheckIn = dutyStart;
-                }
-            }
-
-            // NOTE: We generally pay until actual checkout. Logic can be added here for shiftEnd if needed.
-
             const durationMs = checkOut - effectiveCheckIn;
             // Ensure non-negative (incase checkOut is somehow before dutyStart due to weird data)
             if (durationMs < 0) return 0;
@@ -1902,8 +1881,6 @@
             const phone = document.getElementById('empPhone').value;
             const wage = parseFloat(document.getElementById('empWage').value);
             const passcode = document.getElementById('empPasscode').value;
-            const dutyStart = document.getElementById('empDutyStart').value;
-            const shiftEnd = document.getElementById('empShiftEnd').value;
 
             const hasBioCheck = document.getElementById('empHasBio').checked;
             const bioData = document.getElementById('empBioData').value;
@@ -1930,13 +1907,12 @@
             if (id) {
                 // Edit
                 const idx = employees.findIndex(emp => emp.id == id);
-                employees[idx] = { ...employees[idx], name, phone, wage, passcode, dutyStart, shiftEnd, hasBio: hasBioCheck, bioData: bioData }; // Keep hasBio for simple logic, but can rely on 'bioData' existence
+                employees[idx] = { ...employees[idx], name, phone, wage, passcode, hasBio: hasBioCheck, bioData: bioData }; // Keep hasBio for simple logic, but can rely on 'bioData' existence
             } else {
                 // Add New
                 const newEmp = {
                     id: Date.now().toString(),
                     name, phone, wage, passcode,
-                    dutyStart, shiftEnd,
                     hasBio: hasBioCheck,
                     bioData: bioData,
                     createdAt: new Date().toISOString()
@@ -1958,8 +1934,6 @@
             // email removed
             document.getElementById('empWage').value = emp.wage;
             document.getElementById('empPasscode').value = emp.passcode;
-            document.getElementById('empDutyStart').value = emp.dutyStart || '';
-            document.getElementById('empShiftEnd').value = emp.shiftEnd || '';
 
             // Handle Bio UI
             const chk = document.getElementById('empHasBio');
