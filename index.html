@@ -744,6 +744,28 @@
             color: var(--primary);
             transform: rotate(90deg);
         }
+
+        .kiosk-status {
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+            transition: all 0.3s ease;
+        }
+
+        .kiosk-status.online {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .kiosk-status.offline {
+            background: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
     </style>
 </head>
 
@@ -755,6 +777,7 @@
     <!-- KIOSK START SCREEN -->
     <div id="kiosk-container">
         <div id="kiosk-content">
+            <div id="kioskStatus" class="kiosk-status" title="Connecting..."></div>
             <button class="kiosk-settings-btn" onclick="openAdminLogin()" title="Admin Login">
                 <i class="fas fa-cog"></i>
             </button>
@@ -1282,9 +1305,9 @@
             const tokenInput = document.getElementById('githubTokenInput');
             if (tokenInput) tokenInput.value = GITHUB_TOKEN;
 
-            // Automatically check sync status if token exists
+            // Automatically download latest data if token exists
             if (GITHUB_TOKEN) {
-                checkSyncStatus();
+                downloadFromGitHub();
             } else {
                 setDbStatus('Offline Mode', 'error');
             }
@@ -1394,19 +1417,35 @@
 
         function setDbStatus(msg, type = 'success') {
             const el = document.getElementById('dbStatusDisplay');
-            if (!el) return;
+            const kioskEl = document.getElementById('kioskStatus');
 
             let color = 'var(--success)';
             let icon = 'database';
+            let kioskClass = 'online';
 
-            if (type === 'error') { color = 'var(--danger)'; icon = 'exclamation-triangle'; }
-            if (type === 'working') { color = 'var(--warning)'; icon = 'sync fa-spin'; }
+            if (type === 'error') {
+                color = 'var(--danger)';
+                icon = 'exclamation-triangle';
+                kioskClass = 'offline';
+            }
+            if (type === 'working') {
+                color = 'var(--warning)';
+                icon = 'sync fa-spin';
+                kioskClass = ''; // Default warning color
+            }
 
-            el.style.color = color;
-            el.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
+            if (el) {
+                el.style.color = color;
+                el.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
+            }
+
+            if (kioskEl) {
+                kioskEl.className = 'kiosk-status ' + kioskClass;
+                kioskEl.title = msg;
+            }
         }
 
-        window.addEventListener('online', () => setDbStatus('Connected', 'success'));
+        window.addEventListener('online', () => setDbStatus('Online', 'success'));
         window.addEventListener('offline', () => setDbStatus('Offline Mode', 'error'));
 
         // --- GITHUB SYNC ---
@@ -1429,7 +1468,7 @@
                 });
 
                 if (res.ok) {
-                    setDbStatus('Connected', 'success');
+                    setDbStatus('Online', 'success');
                     const data = await res.json();
                     const cleanContent = data.content.replace(/\n/g, '');
                     const contentStr = decodeURIComponent(escape(atob(cleanContent)));
@@ -1517,7 +1556,7 @@
 
                 if (putRes.ok) {
                     console.log("GitHub Upload Successful");
-                    setDbStatus('Connected', 'success');
+                    setDbStatus('Online', 'success');
 
                     if (statusEl) {
                         statusEl.textContent = 'Last synced: ' + new Date().toLocaleTimeString();
@@ -1581,6 +1620,7 @@
                             statusEl.style.color = 'var(--success)';
                         }
                         if (showAlert) alert("Database restored from GitHub!");
+                        setDbStatus('Online', 'success');
                     }
                 } else {
                     throw new Error("Failed to fetch file");
@@ -2060,6 +2100,9 @@
                 <td>$${emp.wage}</td>
                 <td><span style="letter-spacing: 3px">••••</span></td>
                 <td>
+                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--success); color: var(--success);" onclick="adminClockAction('${emp.id}')">
+                        <i class="fas fa-sign-in-alt"></i> Check In
+                    </button>
                     <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="editEmployee('${emp.id}')">
                         <i class="fas fa-edit"></i> Edit
                     </button>
@@ -2151,6 +2194,14 @@
             }
 
             openModal('employeeModal');
+        }
+
+        function adminClockAction(id) {
+            const emp = employees.find(e => e.id == id);
+            if (emp) {
+                processLogin(emp);
+                renderEmployeeTable(); // Refresh table to show any state changes if needed
+            }
         }
 
         function deleteEmployee(id) {
@@ -2330,18 +2381,21 @@
                 color = 'var(--warning)';
             }
 
-            // Passcode Feedback
             if (msgEl) {
                 msgEl.textContent = message;
                 msgEl.style.color = color;
             }
 
-            // Biometric Feedback
+            const scannerEffect = document.getElementById('scannerEffect');
+            if (scannerEffect) scannerEffect.classList.add('scan-success');
+
             if (bioStatus) {
                 bioStatus.textContent = message;
                 bioStatus.style.color = color;
-                document.getElementById('scannerEffect').classList.add('scan-success');
             }
+
+            // Global Feedback
+            showToast(message, color === 'var(--success)' ? 'success' : 'info');
 
             saveData();
             renderDashboard();
@@ -2349,10 +2403,12 @@
 
             // Close modal
             setTimeout(() => {
-                closeKeypad();
-                if (document.getElementById('scannerEffect')) {
-                    document.getElementById('scannerEffect').classList.remove('scan-success');
+                if (kioskMode === 'clock') {
+                    // Only auto-close if in kiosk mode
+                    try { closeKeypad(); } catch (e) { }
                 }
+
+                if (scannerEffect) scannerEffect.classList.remove('scan-success');
                 if (bioStatus) {
                     bioStatus.textContent = 'Press button below to scan';
                     bioStatus.style.color = 'var(--text-muted)';
