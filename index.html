@@ -982,6 +982,7 @@
                                 <th>Phone</th>
                                 <th>Wage/Hr</th>
                                 <th>Passcode</th>
+                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -1728,7 +1729,7 @@
 
         function getPayableHours(log, emp) {
             const checkIn = new Date(log.checkIn);
-            const checkOut = new Date(log.checkOut);
+            const checkOut = log.checkOut ? new Date(log.checkOut) : new Date();
 
             let effectiveCheckIn = checkIn;
 
@@ -1743,12 +1744,12 @@
             const emp = employees.find(e => e.id == empId);
             if (!emp) return { totalEarned: 0, totalPaid: 0, balance: 0 };
 
-            // Calculate Earned
+            // Calculate Earned (including active shifts)
             let totalEarned = 0;
-            const myLogs = attendanceLogs.filter(log => log.empId == empId && log.checkOut);
+            const myLogs = attendanceLogs.filter(log => log.empId == empId);
             myLogs.forEach(log => {
                 const hours = getPayableHours(log, emp);
-                totalEarned += hours * emp.wage;
+                totalEarned += hours * parseFloat(emp.wage || 0);
             });
 
             // Calculate Paid
@@ -2090,6 +2091,15 @@
             tbody.innerHTML = '';
 
             employees.forEach(emp => {
+                const isWorking = attendanceLogs.some(log => log.empId === emp.id && !log.checkOut);
+                const statusBadge = isWorking ?
+                    '<span class="status-badge status-active">Working</span>' :
+                    '<span class="status-badge" style="background: rgba(158, 158, 158, 0.1); color: #9e9e9e;">Absent</span>';
+
+                const clockActionText = isWorking ? 'Check Out' : 'Check In';
+                const clockActionIcon = isWorking ? 'fa-sign-out-alt' : 'fa-sign-in-alt';
+                const clockActionColor = isWorking ? 'var(--warning)' : 'var(--success)';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                 <td>
@@ -2099,9 +2109,10 @@
                 <td>${emp.phone}</td>
                 <td>$${emp.wage}</td>
                 <td><span style="letter-spacing: 3px">••••</span></td>
+                <td>${statusBadge}</td>
                 <td>
-                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--success); color: var(--success);" onclick="adminClockAction('${emp.id}')">
-                        <i class="fas fa-sign-in-alt"></i> Check In
+                    <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: ${clockActionColor}; color: ${clockActionColor};" onclick="adminClockAction('${emp.id}')">
+                        <i class="fas ${clockActionIcon}"></i> ${clockActionText}
                     </button>
                     <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="editEmployee('${emp.id}')">
                         <i class="fas fa-edit"></i> Edit
