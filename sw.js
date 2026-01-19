@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attendance-sys-v2';
+const CACHE_NAME = 'attendance-sys-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ self.addEventListener('install', (event) => {
         return cache.addAll(ASSETS_TO_CACHE);
       })
   );
+  self.skipWaiting();
 });
 
 // Activate Event - cleanup old caches
@@ -37,6 +38,7 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  self.clients.claim();
 });
 
 // Fetch Event

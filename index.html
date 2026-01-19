@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- Version: 4.0.0 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cafe Attendance System</title>
     <!-- Fonts -->
@@ -52,6 +53,12 @@
             background-image:
                 radial-gradient(circle at 10% 20%, rgba(212, 163, 115, 0.1) 0%, transparent 20%),
                 radial-gradient(circle at 90% 80%, rgba(111, 78, 55, 0.1) 0%, transparent 20%);
+        }
+
+        #admin-app {
+            display: flex;
+            width: 100%;
+            height: 100vh;
         }
 
         /* Sidebar */
@@ -369,7 +376,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 100;
+            z-index: 3000;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -688,6 +695,55 @@
                 opacity: 1;
             }
         }
+
+        /* Kiosk Landing Page */
+        #kiosk-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: var(--bg-dark);
+            z-index: 2000;
+            /* Above everything */
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(212, 163, 115, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(111, 78, 55, 0.1) 0%, transparent 20%);
+        }
+
+        #kiosk-content {
+            background: #1e1e1e;
+            padding: 2rem;
+            border-radius: 20px;
+            border: var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            width: 400px;
+            max-width: 90%;
+            position: relative;
+        }
+
+        .kiosk-settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .kiosk-settings-btn:hover {
+            opacity: 1;
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 
@@ -696,258 +752,347 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="logo">
-            <img src="logo.png" alt="Logo">
-        </div>
-        <ul class="nav-links">
-            <li class="nav-item">
-                <a class="nav-link active" onclick="showSection('dashboard', this)">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="showSection('employees', this)">
-                    <i class="fas fa-users"></i> Employees
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="showSection('payroll', this)">
-                    <i class="fas fa-file-invoice-dollar"></i> Payroll
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="showSection('system', this)">
-                    <i class="fas fa-cogs"></i> System
-                </a>
-            </li>
-        </ul>
-        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: auto;">
-            <p>&copy; 2026 Haraz Systems</p>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="main-content">
-
-        <!-- Header -->
-        <header class="header">
-            <button class="menu-toggle" onclick="toggleSidebar()">
-                <i class="fas fa-bars"></i>
+    <!-- KIOSK START SCREEN -->
+    <div id="kiosk-container">
+        <div id="kiosk-content">
+            <button class="kiosk-settings-btn" onclick="openAdminLogin()" title="Admin Login">
+                <i class="fas fa-cog"></i>
             </button>
-            <h1 class="page-title" id="pageTitle">Dashboard</h1>
 
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <!-- DB Status Indicator -->
-                <div id="dbStatusDisplay"
-                    style="font-size: 0.9rem; font-weight: bold; color: var(--success); display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
-                    <i class="fas fa-database"></i> Connecting...
-                </div>
-                <!-- Clock -->
-                <div class="clock-display" id="clock">12:00 PM</div>
-            </div>
-        </header>
-
-        <!-- DASHBOARD SECTION -->
-        <section id="dashboard" class="section active">
-            <div class="stats-grid">
-                <div class="stat-card" onclick="showStatDetails('total')" style="cursor: pointer;">
-                    <div class="stat-icon employees">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Total Employees</h3>
-                        <p id="totalEmployees">0</p>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="showStatDetails('working')" style="cursor: pointer;">
-                    <div class="stat-icon working">
-                        <i class="fas fa-user-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Currently Working</h3>
-                        <p id="activeEmployees">0</p>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="showStatDetails('ontime')" style="cursor: pointer;">
-                    <div class="stat-icon ontime">
-                        <i class="fas fa-stopwatch"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>On Time Today</h3>
-                        <p id="onTimeEmployees">0</p>
-                    </div>
-                </div>
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Staff Check-In</h2>
+                <p id="kioskClock" style="color: var(--primary); font-weight: 500; font-size: 1.2rem;">--:--</p>
             </div>
 
-            <div class="table-container">
-                <h3 style="margin-bottom: 1rem;">Live Attendance</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Role/Position</th>
-                            <th>Clock In Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="liveAttendanceTable">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- EMPLOYEES SECTION -->
-        <section id="employees" class="section">
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                <button class="btn btn-primary" onclick="openModal('employeeModal')">
-                    <i class="fas fa-plus"></i> Add Employee
-                </button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Wage/Hr</th>
-                            <th>Passcode</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="employeeTable">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- PAYROLL SECTION -->
-        <section id="payroll" class="section">
-            <div class="table-container">
-                <h3 style="margin-bottom: 1rem;">Payroll & Wages</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Employee</th>
-                            <th>Total Earned (All Time)</th>
-                            <th>Total Paid</th>
-                            <th>Balance Due</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="payrollTable">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- SYSTEM SECTION -->
-        <section id="system" class="section">
-            <div class="stats-grid">
-                <!-- Cloud Sync Stats removed -->
+            <div class="tabs-container" style="justify-content: center; margin-bottom: 1.5rem;">
+                <div class="tab active" onclick="switchTab('passcode')" id="tab-passcode">Passcode</div>
+                <div class="tab" onclick="switchTab('biometric')" id="tab-biometric">Biometric</div>
             </div>
 
-            <div class="table-container">
-                <h3 style="margin-bottom: 1.5rem;">System Settings & Backup</h3>
-
-
-                <!-- GitHub Sync Section -->
+            <!-- Passcode Section -->
+            <div id="section-passcode">
                 <div style="margin-bottom: 2rem;">
-                    <div
-                        style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fab fa-github" style="color: var(--text-main)"></i> GitHub Database Sync
-                        </h4>
-
-                        <!-- Token Input -->
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label style="font-size: 0.85rem;">GitHub Personal Access Token</label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="password" class="form-control" id="githubTokenInput"
-                                    placeholder="Enter your GitHub Token" style="font-size: 0.9rem;">
-                                <button class="btn btn-outline" onclick="saveGithubToken()">Save</button>
-                            </div>
-                            <small style="color: var(--text-muted); font-size: 0.75rem;">Token is saved locally in your
-                                browser.</small>
-                        </div>
-
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-                            Manage your cloud backup manually.
-                        </p>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <button class="btn btn-outline" style="border-color: var(--primary); color: var(--primary);"
-                                onclick="uploadToGitHub(true)">
-                                <i class="fas fa-cloud-upload-alt"></i> Upload Database
-                            </button>
-                            <button class="btn btn-outline" style="border-color: var(--warning); color: var(--warning);"
-                                onclick="downloadFromGitHub(true)">
-                                <i class="fas fa-cloud-download-alt"></i> Download Database
-                            </button>
-                        </div>
-                        <div id="githubStatus"
-                            style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
-                        </div>
+                    <input type="password" class="form-control" id="keypadDisplay" readonly
+                        style="font-size: 2rem; letter-spacing: 0.5rem; text-align: center; height: 60px;">
+                    <div id="keypadMsg" style="text-align: center; margin-top: 10px; height: 20px; font-size: 0.9rem;">
                     </div>
+                </div>
+                <div class="keypad">
+                    <button class="key-btn" onclick="keyPress(1)">1</button>
+                    <button class="key-btn" onclick="keyPress(2)">2</button>
+                    <button class="key-btn" onclick="keyPress(3)">3</button>
+                    <button class="key-btn" onclick="keyPress(4)">4</button>
+                    <button class="key-btn" onclick="keyPress(5)">5</button>
+                    <button class="key-btn" onclick="keyPress(6)">6</button>
+                    <button class="key-btn" onclick="keyPress(7)">7</button>
+                    <button class="key-btn" onclick="keyPress(8)">8</button>
+                    <button class="key-btn" onclick="keyPress(9)">9</button>
+                    <button class="key-btn" onclick="keyPress('clear')" style="color: var(--danger)"><i
+                            class="fas fa-backspace"></i></button>
+                    <button class="key-btn" onclick="keyPress(0)">0</button>
+                    <button class="key-btn" onclick="submitPasscode()"
+                        style="background: var(--primary); color:black"><i class="fas fa-check"></i></button>
                 </div>
             </div>
 
-            <!-- Local Backup Section -->
-            <div
-                style="margin-top: 2rem; margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="margin-bottom: 1rem;">Local Backup</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                    <div
-                        style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-file-export" style="color: var(--primary)"></i> Backup to File
-                        </h4>
-                        <button class="btn btn-outline" style="width: 100%;" onclick="downloadLocalBackup()">
-                            <i class="fas fa-download"></i> Save Backup
-                        </button>
-                    </div>
-                    <div
-                        style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-file-import" style="color: var(--warning)"></i> Restore from File
-                        </h4>
-                        <input type="file" id="restoreFile" style="display: none" onchange="restoreLocalBackup(this)"
-                            accept=".json">
-                        <button class="btn btn-outline"
-                            style="width: 100%; color: var(--warning); border-color: var(--warning);"
-                            onclick="document.getElementById('restoreFile').click()">
-                            <i class="fas fa-upload"></i> Restore Backup
-                        </button>
-                    </div>
+            <!-- Biometric Section -->
+            <div id="section-biometric" style="display: none;">
+                <div class="scanner-container" id="scannerEffect">
+                    <div class="scanner-ring"></div>
+                    <div class="scan-line"></div>
+                    <i class="fas fa-fingerprint fingerprint-icon"></i>
+                </div>
+                <div style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
+                    <p id="bioStatus">Press the button below to scan</p>
+                </div>
+
+                <div style="display: flex; justify-content: center;">
+                    <button class="btn btn-primary" onclick="authenticateBiometric()"
+                        style="padding: 1rem 2rem; border-radius: 50px;">
+                        <i class="fas fa-fingerprint"></i> Scan Fingerprint
+                    </button>
                 </div>
             </div>
 
-            <!-- Local Reset -->
-            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                <h4 style="color: var(--danger); margin-bottom: 0.5rem;">Danger Zone</h4>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-                    Permanently delete all local data. This cannot be undone.
-                </p>
-                <button class="btn"
-                    style="background: rgba(244, 67, 54, 0.2); color: var(--danger); border: 1px solid var(--danger);"
-                    onclick="resetLocalData()">
-                    <i class="fas fa-trash-alt"></i> Reset Local Database
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div class="modal-overlay" id="adminLoginModal">
+        <div class="modal" style="width: 350px;">
+            <div class="modal-header">
+                <h2>Admin Login</h2>
+                <button class="close-modal" onclick="closeModal('adminLoginModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="form-control" id="adminPassword" placeholder="Admin Password">
+            </div>
+            <button class="btn btn-primary" onclick="checkAdminPassword()" style="width: 100%;">Login</button>
+        </div>
+    </div>
+
+    <!-- Main Application (Hidden by Default) -->
+    <div id="admin-app" style="display:none">
+
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <img src="logo.png" alt="Logo">
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="showSection('dashboard', this)">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('employees', this)">
+                        <i class="fas fa-users"></i> Employees
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('payroll', this)">
+                        <i class="fas fa-file-invoice-dollar"></i> Payroll
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('system', this)">
+                        <i class="fas fa-cogs"></i> System
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="logoutAdmin()" style="color: var(--danger)">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: auto;">
+                <p>&copy; 2026 Haraz Systems</p>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Header -->
+            <header class="header">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
                 </button>
-            </div>
-            </div>
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
 
-            <div id="syncStatus" style="margin-top: 1rem; text-align: center; height: 1.5rem; font-weight: 500;"></div>
-        </section>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <!-- DB Status Indicator -->
+                    <div id="dbStatusDisplay"
+                        style="font-size: 0.9rem; font-weight: bold; color: var(--warning); display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
+                        <i class="fas fa-database"></i> Initializing...
+                    </div>
+                    <!-- Clock -->
+                    <div class="clock-display" id="clock">12:00 PM</div>
+                </div>
+            </header>
+
+            <!-- DASHBOARD SECTION -->
+            <section id="dashboard" class="section active">
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="showStatDetails('total')" style="cursor: pointer;">
+                        <div class="stat-icon employees">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Employees</h3>
+                            <p id="totalEmployees">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="showStatDetails('working')" style="cursor: pointer;">
+                        <div class="stat-icon working">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Currently Working</h3>
+                            <p id="activeEmployees">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="closeDay()"
+                        style="cursor: pointer; border-color: rgba(244, 67, 54, 0.3);">
+                        <div class="stat-icon" style="color: var(--danger); background: rgba(244, 67, 54, 0.1);">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Day Close</h3>
+                            <p style="font-size: 1.1rem; color: var(--danger); font-weight: 600;">Sign Out All</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <h3 style="margin-bottom: 1rem;">Live Attendance</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role/Position</th>
+                                <th>Clock In Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liveAttendanceTable">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- EMPLOYEES SECTION -->
+            <section id="employees" class="section">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                    <button class="btn btn-primary" onclick="clearForm(); openModal('employeeModal')">
+                        <i class="fas fa-plus"></i> Add Employee
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Wage/Hr</th>
+                                <th>Passcode</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTable">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PAYROLL SECTION -->
+            <section id="payroll" class="section">
+                <div class="table-container">
+                    <h3 style="margin-bottom: 1rem;">Payroll & Wages</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Total Earned (All Time)</th>
+                                <th>Total Paid</th>
+                                <th>Balance Due</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payrollTable">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SYSTEM SECTION -->
+            <section id="system" class="section">
+                <div class="stats-grid">
+                    <!-- Cloud Sync Stats removed -->
+                </div>
+
+                <div class="table-container">
+                    <h3 style="margin-bottom: 1.5rem;">System Settings & Backup</h3>
+
+
+                    <!-- GitHub Sync Section -->
+                    <div style="margin-bottom: 2rem;">
+                        <div
+                            style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fab fa-github" style="color: var(--text-main)"></i> GitHub Database Sync
+                            </h4>
+
+                            <!-- Token Input -->
+                            <div class="form-group" style="margin-bottom: 1.5rem;">
+                                <label style="font-size: 0.85rem;">GitHub Personal Access Token</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="password" class="form-control" id="githubTokenInput"
+                                        placeholder="Enter your GitHub Token" style="font-size: 0.9rem;">
+                                    <button class="btn btn-outline" onclick="saveGithubToken()">Save</button>
+                                </div>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Token is saved locally in
+                                    your
+                                    browser.</small>
+                            </div>
+
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                                Manage your cloud backup manually.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <button class="btn btn-outline"
+                                    style="border-color: var(--primary); color: var(--primary);"
+                                    onclick="uploadToGitHub(true)">
+                                    <i class="fas fa-cloud-upload-alt"></i> Upload Database
+                                </button>
+                                <button class="btn btn-outline"
+                                    style="border-color: var(--warning); color: var(--warning);"
+                                    onclick="downloadFromGitHub(true)">
+                                    <i class="fas fa-cloud-download-alt"></i> Download Database
+                                </button>
+                            </div>
+                            <div id="githubStatus"
+                                style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Local Backup Section -->
+                <div
+                    style="margin-top: 2rem; margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="margin-bottom: 1rem;">Local Backup</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div
+                            style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-file-export" style="color: var(--primary)"></i> Backup to File
+                            </h4>
+                            <button class="btn btn-outline" style="width: 100%;" onclick="downloadLocalBackup()">
+                                <i class="fas fa-download"></i> Save Backup
+                            </button>
+                        </div>
+                        <div
+                            style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-file-import" style="color: var(--warning)"></i> Restore from File
+                            </h4>
+                            <input type="file" id="restoreFile" style="display: none"
+                                onchange="restoreLocalBackup(this)" accept=".json">
+                            <button class="btn btn-outline"
+                                style="width: 100%; color: var(--warning); border-color: var(--warning);"
+                                onclick="document.getElementById('restoreFile').click()">
+                                <i class="fas fa-upload"></i> Restore Backup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Local Reset -->
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h4 style="color: var(--danger); margin-bottom: 0.5rem;">Danger Zone</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                        Permanently delete all local data. This cannot be undone.
+                    </p>
+                    <button class="btn"
+                        style="background: rgba(244, 67, 54, 0.2); color: var(--danger); border: 1px solid var(--danger);"
+                        onclick="resetLocalData()">
+                        <i class="fas fa-trash-alt"></i> Reset Local Database
+                    </button>
+                </div>
+    </div>
+
+    <div id="syncStatus" style="margin-top: 1rem; text-align: center; height: 1.5rem; font-weight: 500;"></div>
+    </section>
 
     </main>
 
-    <!-- KIOSK BUTTON -->
-    <button class="fab" onclick="openKeypad('clock')" title="Clock In/Out">
-        <i class="fas fa-fingerprint"></i>
-    </button>
+
 
     <!-- EMPLOYEE MODAL -->
     <div class="modal-overlay" id="employeeModal">
@@ -1014,66 +1159,7 @@
         </div>
     </div>
 
-    <!-- KEYPAD / BIOMETRIC MODAL -->
-    <div class="modal-overlay" id="keypadModal">
-        <div class="modal" style="width: 380px;">
-            <div class="modal-header">
-                <h2>Staff Check-In</h2>
-                <button class="close-modal" onclick="closeKeypad()">&times;</button>
-            </div>
 
-            <div class="tabs-container">
-                <div class="tab active" onclick="switchTab('passcode')" id="tab-passcode">Passcode</div>
-                <div class="tab" onclick="switchTab('biometric')" id="tab-biometric">Biometric</div>
-            </div>
-
-            <!-- Passcode Section -->
-            <div id="section-passcode">
-                <div style="margin-bottom: 2rem;">
-                    <input type="password" class="form-control" id="keypadDisplay" readonly
-                        style="font-size: 2rem; letter-spacing: 0.5rem; text-align: center; height: 60px;">
-                    <div id="keypadMsg" style="text-align: center; margin-top: 10px; height: 20px; font-size: 0.9rem;">
-                    </div>
-                </div>
-                <div class="keypad">
-                    <button class="key-btn" onclick="keyPress(1)">1</button>
-                    <button class="key-btn" onclick="keyPress(2)">2</button>
-                    <button class="key-btn" onclick="keyPress(3)">3</button>
-                    <button class="key-btn" onclick="keyPress(4)">4</button>
-                    <button class="key-btn" onclick="keyPress(5)">5</button>
-                    <button class="key-btn" onclick="keyPress(6)">6</button>
-                    <button class="key-btn" onclick="keyPress(7)">7</button>
-                    <button class="key-btn" onclick="keyPress(8)">8</button>
-                    <button class="key-btn" onclick="keyPress(9)">9</button>
-                    <button class="key-btn" onclick="keyPress('clear')" style="color: var(--danger)"><i
-                            class="fas fa-backspace"></i></button>
-                    <button class="key-btn" onclick="keyPress(0)">0</button>
-                    <button class="key-btn" onclick="submitPasscode()"
-                        style="background: var(--primary); color:black"><i class="fas fa-check"></i></button>
-                </div>
-            </div>
-
-            <!-- Biometric Section -->
-            <div id="section-biometric" style="display: none;">
-                <div class="scanner-container" id="scannerEffect">
-                    <div class="scanner-ring"></div>
-                    <div class="scan-line"></div>
-                    <i class="fas fa-fingerprint fingerprint-icon"></i>
-                </div>
-                <div style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
-                    <p id="bioStatus">Press the button below to scan</p>
-                </div>
-
-                <div style="display: flex; justify-content: center;">
-                    <button class="btn btn-primary" onclick="authenticateBiometric()"
-                        style="padding: 1rem 2rem; border-radius: 50px;">
-                        <i class="fas fa-fingerprint"></i> Scan Fingerprint
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </div>
 
     <!-- PAYROLL DETAILS MODAL -->
     <div class="modal-overlay" id="payrollModal">
@@ -1113,7 +1199,6 @@
                     <i class="fas fa-money-bill-wave"></i> Record Payment
                 </button>
             </div>
-
             <div class="tabs-container">
                 <div class="tab active" onclick="switchDetailTab('history')" id="dtab-history">Work History</div>
                 <div class="tab" onclick="switchDetailTab('payments')" id="dtab-payments">Payment Records</div>
@@ -1145,9 +1230,7 @@
                     <tbody id="paymentHistoryBody"></tbody>
                 </table>
             </div>
-
         </div>
-    </div>
     </div>
 
     <!-- LIST DETAILS MODAL -->
@@ -1162,6 +1245,10 @@
             </div>
         </div>
     </div>
+    </div>
+    <!-- End Admin App -->
+
+
 
     <script>
         // State Management
@@ -1186,12 +1273,50 @@
             setInterval(updateClock, 1000);
             renderDashboard();
             renderEmployeeTable();
-            // Auto-sync removed
+
+            // Special: Initial state is Kiosk only
+            document.getElementById('kiosk-container').style.display = 'flex';
+            document.getElementById('admin-app').style.display = 'none';
 
             // Load Saved Token
             const tokenInput = document.getElementById('githubTokenInput');
             if (tokenInput) tokenInput.value = GITHUB_TOKEN;
+
+            // Automatically check sync status if token exists
+            if (GITHUB_TOKEN) {
+                checkSyncStatus();
+            } else {
+                setDbStatus('Offline Mode', 'error');
+            }
         });
+
+        // --- ADMIN LOGIN ---
+        function openAdminLogin() {
+            document.getElementById('adminLoginModal').classList.add('open');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminPassword').focus();
+        }
+
+        function checkAdminPassword() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === 'admin786') {
+                closeModal('adminLoginModal');
+                document.getElementById('kiosk-container').style.display = 'none';
+                document.getElementById('admin-app').style.display = 'flex';
+                showToast("Welcome Admin", "success");
+            } else {
+                alert("Incorrect Admin Password");
+            }
+        }
+
+        function logoutAdmin() {
+            if (confirm("Logout from admin and return to check-in screen?")) {
+                document.getElementById('admin-app').style.display = 'none';
+                document.getElementById('kiosk-container').style.display = 'flex';
+                // Reset to dashboard for next time
+                showSection('dashboard', document.querySelector('.nav-link'));
+            }
+        }
 
         function saveGithubToken() {
             const token = document.getElementById('githubTokenInput').value.trim();
@@ -1242,8 +1367,7 @@
             }
 
             if (sectionId === 'dashboard') renderDashboard();
-            if (sectionId === 'payroll') renderPayrollTable();
-            if (sectionId === 'dashboard') renderDashboard();
+            if (sectionId === 'employees') renderEmployeeTable();
             if (sectionId === 'payroll') renderPayrollTable();
         }
 
@@ -1282,27 +1406,31 @@
             el.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
         }
 
-        window.addEventListener('online', () => setDbStatus('Database Connected', 'success'));
+        window.addEventListener('online', () => setDbStatus('Connected', 'success'));
         window.addEventListener('offline', () => setDbStatus('Offline Mode', 'error'));
 
         // --- GITHUB SYNC ---
 
         async function checkSyncStatus() {
-            setDbStatus('Connecting...', 'working');
+            setDbStatus('Syncing...', 'working');
             const statusEl = document.getElementById('githubStatus');
             if (statusEl) statusEl.textContent = 'Checking cloud for updates...';
 
+            if (!GITHUB_TOKEN) {
+                setDbStatus('Offline Mode', 'error');
+                if (statusEl) statusEl.textContent = 'GitHub token not set.';
+                return;
+            }
+
             try {
                 const res = await fetch(API_URL, {
-                    headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+                    headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' },
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
                 });
 
                 if (res.ok) {
-                    setDbStatus('Database Connected', 'success');
+                    setDbStatus('Connected', 'success');
                     const data = await res.json();
-
-                    // Optimization: If content is large, GitHub API returns valid base64 with newlines.
-                    // We need to clean it before decoding.
                     const cleanContent = data.content.replace(/\n/g, '');
                     const contentStr = decodeURIComponent(escape(atob(cleanContent)));
                     const content = JSON.parse(contentStr);
@@ -1312,7 +1440,7 @@
 
                     if (cloudLastUpdate > localLastUpdate) {
                         if (statusEl) {
-                            statusEl.innerHTML = `<span style="color: var(--warning)"><i class="fas fa-exclamation-circle"></i> New cloud data available! (${cloudLastUpdate.toLocaleString()})</span>`;
+                            statusEl.innerHTML = `<span style="color: var(--warning)"><i class="fas fa-exclamation-circle"></i> Update available (${cloudLastUpdate.toLocaleString()})</span>`;
                         }
                     } else {
                         if (statusEl) {
@@ -1320,9 +1448,14 @@
                             statusEl.style.color = 'var(--success)';
                         }
                     }
+                } else {
+                    setDbStatus('Sync Error', 'error');
+                    if (statusEl) statusEl.textContent = 'Error: ' + res.statusText;
                 }
             } catch (err) {
                 console.error("Check Sync Failed", err);
+                setDbStatus('Sync Error', 'error');
+                if (statusEl) statusEl.textContent = 'Connection failed.';
             }
         }
 
@@ -1384,7 +1517,7 @@
 
                 if (putRes.ok) {
                     console.log("GitHub Upload Successful");
-                    setDbStatus('Database Updated', 'success');
+                    setDbStatus('Connected', 'success');
 
                     if (statusEl) {
                         statusEl.textContent = 'Last synced: ' + new Date().toLocaleTimeString();
@@ -1701,6 +1834,63 @@
             }
         }
 
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            document.getElementById('totalEmployees').textContent = employees.length;
+
+            // Active Employees (No Checkout time on their last active log)
+            const activeLogs = attendanceLogs.filter(log => !log.checkOut);
+            document.getElementById('activeEmployees').textContent = activeLogs.length;
+
+            // Day Close card replaces On-Time today logic
+            // The 'onTimeEmployees' element is no longer used.
+
+            // Live Table
+            const liveTbody = document.getElementById('liveAttendanceTable');
+            if (activeLogs.length === 0) {
+                liveTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted)">No employees currently working</td></tr>`;
+            } else {
+                liveTbody.innerHTML = activeLogs.map(log => {
+                    const emp = employees.find(e => e.id === log.empId);
+                    if (!emp) return '';
+                    const checkInTime = new Date(log.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return `
+                        <tr>
+                            <td>${emp.name}</td>
+                            <td>${emp.role || 'Staff'}</td>
+                            <td>${checkInTime}</td>
+                            <td><span class="status-badge status-active">Clocked In</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function closeDay() {
+            const activeLogs = attendanceLogs.filter(log => !log.checkOut);
+            if (activeLogs.length === 0) {
+                alert("No employees are currently clocked in.");
+                const payrollLink = document.querySelector('a[onclick*="payroll"]');
+                showSection('payroll', payrollLink);
+                return;
+            }
+
+            if (confirm(`Clock out all ${activeLogs.length} active employees and close the day?`)) {
+                const now = new Date().toISOString();
+                activeLogs.forEach(log => {
+                    log.checkOut = now;
+                });
+
+                saveData();
+                renderDashboard();
+                renderPayrollTable();
+                showToast("Day closed. All staff clocked out.", "success");
+
+                const payrollLink = document.querySelector('a[onclick*="payroll"]');
+                showSection('payroll', payrollLink);
+            }
+        }
+
         // --- DASHBOARD INTERACTIONS ---
         function showStatDetails(type) {
             const modalTitle = document.getElementById('listModalTitle');
@@ -1776,15 +1966,27 @@
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (document.getElementById('clock')) document.getElementById('clock').textContent = timeStr;
+            if (document.getElementById('kioskClock')) document.getElementById('kioskClock').textContent = timeStr;
         }
 
         // --- MODALS ---
         function openModal(id) {
             document.getElementById(id).classList.add('open');
+        }
+
+        function clearForm() {
             document.getElementById('editEmployeeId').value = '';
-            document.querySelector('form').reset();
+            const form = document.querySelector('#employeeModal form');
+            if (form) form.reset();
             document.getElementById('empWage').value = '15.00';
+            // Also reset Bio UI
+            const chk = document.getElementById('empHasBio');
+            if (chk) {
+                chk.checked = false;
+                toggleBioRegistration(chk);
+            }
         }
 
 
@@ -2235,139 +2437,6 @@
                 currentPasscode = '';
                 updateKeypadDisplay();
             }
-        }
-
-        function renderEmployeeTable() {
-            const tbody = document.getElementById('employeeTable');
-            tbody.innerHTML = employees.map(emp => `
-                <tr>
-                    <td>${emp.name}</td>
-                    <td>${emp.phone}</td>
-                    <td>${emp.email || '-'}</td>
-                    <td>$${emp.wage}/hr</td>
-                    <td><span style="filter: blur(4px);">${emp.passcode}</span></td>
-                    <td>
-                        <button class="btn btn-outline" style="padding: 0.4rem;" onclick="editEmployee('${emp.id}')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-outline" style="padding: 0.4rem;" onclick="deleteEmployee('${emp.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-            document.getElementById('totalEmployees').textContent = employees.length;
-        }
-
-        function deleteEmployee(id) {
-            if (confirm('Are you sure you want to remove this employee?')) {
-                employees = employees.filter(e => e.id != id);
-                saveData();
-                renderEmployeeTable();
-                renderDashboard();
-            }
-        }
-
-        // --- DASHBOARD ---
-        function renderDashboard() {
-            document.getElementById('totalEmployees').textContent = employees.length;
-
-            // Active Employees (No Checkout time on their last active log)
-            const activeLogs = attendanceLogs.filter(log => !log.checkOut);
-            document.getElementById('activeEmployees').textContent = activeLogs.length;
-
-            // On Time (Clocked in today before SHIFT_START_HOUR)
-            const today = new Date().toDateString();
-            const onTimeCount = attendanceLogs.filter(log => {
-                const logDate = new Date(log.checkIn);
-                return logDate.toDateString() === today && logDate.getHours() < SHIFT_START_HOUR;
-            }).length;
-            document.getElementById('onTimeEmployees').textContent = onTimeCount;
-
-            // Live Table
-            const liveTbody = document.getElementById('liveAttendanceTable');
-            if (activeLogs.length === 0) {
-                liveTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted)">No employees currently working</td></tr>`;
-            } else {
-                liveTbody.innerHTML = activeLogs.map(log => {
-                    const emp = employees.find(e => e.id === log.empId);
-                    if (!emp) return '';
-                    const checkInTime = new Date(log.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    return `
-                        <tr>
-                            <td>${emp.name}</td>
-                            <td>Barista/Staff</td>
-                            <td>${checkInTime}</td>
-                            <td><span class="status-badge status-active">Clocked In</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-        }
-
-        // --- PAYROLL ---
-        function calculatePayroll() {
-            const startStr = document.getElementById('payrollStart').value;
-            const endStr = document.getElementById('payrollEnd').value;
-
-            if (!startStr || !endStr) {
-                alert("Please select both start and end dates.");
-                return;
-            }
-
-            const start = new Date(startStr);
-            const end = new Date(endStr);
-            // Set end to end of day
-            end.setHours(23, 59, 59);
-
-            const tbody = document.getElementById('payrollTable');
-
-            // Group logs by employee
-            const report = {};
-
-            employees.forEach(emp => {
-                report[emp.id] = {
-                    name: emp.name,
-                    wage: emp.wage,
-                    totalHours: 0
-                };
-            });
-
-            attendanceLogs.forEach(log => {
-                const logIn = new Date(log.checkIn);
-                if (logIn >= start && logIn <= end && log.checkOut) {
-                    const emp = employees.find(e => e.id === log.empId);
-                    if (emp) {
-                        const hours = getPayableHours(log, emp);
-                        if (report[log.empId]) {
-                            report[log.empId].totalHours += hours;
-                        }
-                    }
-                }
-            });
-
-            let html = '';
-            for (const empId in report) {
-                const data = report[empId];
-                const totalPay = data.totalHours * data.wage;
-
-                if (data.totalHours > 0) {
-                    html += `
-                        <tr>
-                            <td>${data.name}</td>
-                            <td>${data.totalHours.toFixed(2)} hrs</td>
-                            <td>$${data.wage}/hr</td>
-                            <td style="color: var(--success); font-weight: bold;">$${totalPay.toFixed(2)}</td>
-                        </tr>
-                    `;
-                }
-            }
-
-            if (html === '') {
-                html = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted)">No completed shifts found in this range</td></tr>`;
-            }
-
-            tbody.innerHTML = html;
         }
 
     </script>
