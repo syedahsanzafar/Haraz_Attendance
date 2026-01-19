@@ -16,6 +16,10 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121212">
     <link rel="apple-touch-icon" href="logo.png">
+    <!-- PDF & Excel Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Styles -->
     <style>
         :root {
@@ -849,7 +853,8 @@
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" class="form-control" id="adminPassword" placeholder="Admin Password">
+                <input type="password" class="form-control" id="adminPassword" placeholder="Admin Password"
+                    onkeyup="if(event.key === 'Enter') checkAdminPassword()">
             </div>
             <button class="btn btn-primary" onclick="checkAdminPassword()" style="width: 100%;">Login</button>
         </div>
@@ -877,6 +882,11 @@
                 <li class="nav-item">
                     <a class="nav-link" onclick="showSection('payroll', this)">
                         <i class="fas fa-file-invoice-dollar"></i> Payroll
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('reports', this)">
+                        <i class="fas fa-file-alt"></i> Reports
                     </a>
                 </li>
                 <li class="nav-item">
@@ -1009,6 +1019,56 @@
                         </thead>
                         <tbody id="payrollTable">
                             <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- REPORTS SECTION -->
+            <section id="reports" class="section">
+                <h3 style="margin-bottom: 1.5rem;">Generate Reports</h3>
+
+                <div
+                    style="background: var(--bg-card); padding: 1.5rem; border-radius: 16px; border: var(--glass-border); margin-bottom: 2rem;">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Start Date</label>
+                            <input type="date" class="form-control" id="reportStartDate">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>End Date</label>
+                            <input type="date" class="form-control" id="reportEndDate">
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn btn-primary" onclick="generateReport('pdf')">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <button class="btn btn-primary" style="background: #217346; color: white;"
+                                onclick="generateReport('excel')">
+                                <i class="fas fa-file-excel"></i> Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-muted);">Preview</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Wage/Hr</th>
+                                <th>Total Hours</th>
+                                <th>Total Wage</th>
+                                <th>Total Paid</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportPreviewTable">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted);">Select dates and
+                                    generate report to see preview</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -1381,6 +1441,7 @@
                 'dashboard': 'Dashboard',
                 'employees': 'Staff Management',
                 'payroll': 'Payroll & Wages',
+                'reports': 'Reports',
                 'system': 'System Settings'
             };
             document.getElementById('pageTitle').textContent = titles[sectionId];
@@ -2506,6 +2567,145 @@
             }
         }
 
+        // --- REPORTS GENERATION ---
+        function getReportData(start, end) {
+            const reportData = [];
+
+            // Set end date to end of day
+            const endDateInclusive = new Date(end);
+            endDateInclusive.setHours(23, 59, 59, 999);
+
+            employees.forEach(emp => {
+                let totalMs = 0;
+                let totalPaid = 0;
+
+                // Calculate working hours
+                attendanceLogs.forEach(log => {
+                    if (log.empId === emp.id && log.checkOut) {
+                        const checkIn = new Date(log.checkIn);
+                        if (checkIn >= start && checkIn <= endDateInclusive) {
+                            totalMs += (new Date(log.checkOut) - checkIn);
+                        }
+                    }
+                });
+
+                // Calculate total paid
+                // payments array structure: { empId, amount, date }
+                payments.forEach(pay => {
+                    if (pay.empId === emp.id) {
+                        const payDate = new Date(pay.date);
+                        if (payDate >= start && payDate <= endDateInclusive) {
+                            totalPaid += parseFloat(pay.amount || 0);
+                        }
+                    }
+                });
+
+                const hours = totalMs / (1000 * 60 * 60);
+                const totalWage = hours * parseFloat(emp.wage);
+
+                if (hours > 0 || totalPaid > 0) {
+                    reportData.push({
+                        name: emp.name,
+                        wagePerHr: parseFloat(emp.wage || 0).toFixed(2),
+                        totalHours: hours.toFixed(2),
+                        totalWage: totalWage.toFixed(2),
+                        totalPaid: totalPaid.toFixed(2)
+                    });
+                }
+            });
+
+            return reportData;
+        }
+
+        function generateReport(type) {
+            const startStr = document.getElementById('reportStartDate').value;
+            const endStr = document.getElementById('reportEndDate').value;
+
+            if (!startStr || !endStr) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            const data = getReportData(start, end);
+
+            // Update Preview Table
+            const tbody = document.getElementById('reportPreviewTable');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No data found for this period</td></tr>`;
+                if (type) alert("No data to generate report.");
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>$${item.wagePerHr}</td>
+                    <td>${item.totalHours}</td>
+                    <td>$${item.totalWage}</td>
+                    <td>$${item.totalPaid}</td>
+                </tr>
+            `).join('');
+
+            if (type === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFontSize(20,);
+                doc.text("HARAZ COFFEE SHOP", 14, 20);
+                doc.setFontSize(10);
+                doc.text("15775 old columbia pike, burtonsville, md 20866", 14, 25);
+                doc.setFontSize(14);
+                doc.text("Attendance Report", 85, 40);
+                doc.setFontSize(11);
+                doc.text(`Period: ${startStr} to ${endStr}`, 14, 31);
+                doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 36);
+
+                const tableColumn = ["Employee Name", "Wage/Hr", "Total Hours", "Total Wage", "Total Paid"];
+                const tableRows = data.map(item => [
+                    item.name,
+                    `$${item.wagePerHr}`,
+                    item.totalHours,
+                    `$${item.totalWage}`,
+                    `$${item.totalPaid}`
+                ]);
+
+                doc.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 44,
+                    theme: 'grid',
+                    headStyles: { fillColor: [212, 163, 115] } // Matches --primary color
+                });
+
+                doc.save(`Report_${startStr}_to_${endStr}.pdf`);
+            } else if (type === 'excel') {
+                const wb = XLSX.utils.book_new();
+
+                // Format data for Excel
+                const wsData = [
+                    ["Haraz Attendance Report"],
+                    [`Period: ${startStr} to ${endStr}`],
+                    [`Generated: ${new Date().toLocaleString()}`],
+                    [], // Empty row
+                    ["Employee Name", "Wage/Hr", "Total Hours", "Total Wage", "Total Paid"]
+                ];
+
+                data.forEach(item => {
+                    wsData.push([
+                        item.name,
+                        parseFloat(item.wagePerHr),
+                        parseFloat(item.totalHours),
+                        parseFloat(item.totalWage),
+                        parseFloat(item.totalPaid)
+                    ]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, "Report");
+                XLSX.writeFile(wb, `Report_${startStr}_to_${endStr}.xlsx`);
+            }
+        }
     </script>
     <script>
         if ('serviceWorker' in navigator) {
