@@ -1,1 +1,1 @@
-{"employees":[],"attendanceLogs":[],"payments":[],"lastUpdated":"2026-01-22T22:25:36.249Z"}
+{"employees":[{"id":"1769120896753","name":"Aaryan Babar","phone":"4433333750","wage":16,"passcode":"227926","hasBio":false,"bioData":"","createdAt":"2026-01-22T22:28:16.753Z"}],"attendanceLogs":[],"payments":[],"lastUpdated":"2026-01-22T22:28:16.753Z"}
